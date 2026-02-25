@@ -45,7 +45,7 @@ const Pricing = () => {
       period: " / month",
       description: "Best for job seekers",
       buttonText: "Upgrade to Pro",
-      buttonAction: () => {},
+     buttonAction: () => navigate(`${isLoggedIn ? "/user/dashboard" : "/login"}`),
       gradient: true,
       features: [
         { name: "AI Resume Builder", included: true },
@@ -70,7 +70,7 @@ const Pricing = () => {
       period: " / year",
       description: "For career acceleration",
       buttonText: "Unlock Premium",
-      buttonAction: () => {},
+      buttonAction: () => navigate(`${isLoggedIn ? "/user/dashboard" : "/login"}`),
       gradient: false,
       features: [
         { name: "AI Resume Builder", included: true },

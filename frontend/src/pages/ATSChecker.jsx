@@ -177,15 +177,15 @@ const ATSCheckerFeature = () => {
       <NavBar />
 
       {/* 1) HERO SECTION */}
-      <section ref={heroRef} className="relative px-6 pt-16 pb-20 overflow-hidden bg-white">
+      <section ref={heroRef} className="relative px-6 pt-20 pb-20 overflow-hidden bg-white">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-3xl -z-10 opacity-60" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-50/50 rounded-full blur-3xl -z-10 opacity-60" />
 
         <div className="mx-auto max-w-7xl">
-          <div className="grid items-center gap-16 lg:grid-cols-2">
+          <div className="grid items-center gap-16 lg:grid-cols-2 overflow-hidden">
             <div className={`transition-all duration-700 ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
               <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 border rounded-full bg-slate-50 border-slate-100">
-                <Shield size={14} className="text-[#0077cc]" />
+                <Shield size={14} className="text-[#0077cc] pt-0 py-0 px-0"  />
                 <span className="text-xs font-bold tracking-widest text-slate-500 uppercase">
                   Recruiter Screening
                 </span>
@@ -225,7 +225,7 @@ const ATSCheckerFeature = () => {
                 <img
                   src={Lady}
                   alt="Character pointing to ATS score"
-                  className="hidden lg:block absolute left-[-13rem] bottom-0 w-100 xl:w-48 2xl:w-56 object-contain"
+                  className="hidden lg:block absolute left-[-13rem] bottom-0 w-100  object-contain "
                 />
                 <ATSDonutCard score={82} />
               </div>
@@ -245,7 +245,7 @@ const ATSCheckerFeature = () => {
               { step: "03", title: "Improve Score", desc: "Get Actionable Fixes" },
             ].map((s, i) => (
               <div key={i} className="flex flex-col items-center text-center bg-white px-4">
-                <div className="w-12 h-12 rounded-full bg-[#f0f7ff] text-[#0077cc] flex items-center justify-center font-black text-lg mb-3 shadow-sm border border-blue-100">
+                <div className="w-12 h-12 rounded-full bg-[#f0f7ff] text-[#0077cc] flex items-center justify-center font-black text-lg mb-3 shadow-sm border border-blue-100 transition-all hover:shadow-2xl hover:border-blue-400 hover:-translate-y-2 group">
                   {s.step}
                 </div>
                 <h4 className="text-base font-bold text-[#1a2e52]">{s.title}</h4>
