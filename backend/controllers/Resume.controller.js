@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import Resume from "../Models/resume.js";
 import AtsScans from "../Models/atsScan.js";
 
+
 // AI Service
 import { generateResumeAI } from "../ai/aiService.js";
 
@@ -26,28 +27,28 @@ import nlp from "compromise";
 // ADD THIS WHITELIST AT MODULE LEVEL (outside function)
 const SPELL_WHITELIST = new Set([
   // Technical terms & acronyms
-  'api', 'apis', 'http', 'https', 'html', 'css', 'javascript', 'js', 'jsx', 'ts', 'tsx',
-  'react', 'vue', 'angular', 'node', 'nodejs', 'express', 'mongodb', 'mongo', 'mysql',
+  'api', 'apis', 'http', 'https', 'html', 'css', 'javascript', 'js', 'jsx', 'ts', 'tsx', 
+  'react', 'vue', 'angular', 'node', 'nodejs', 'express', 'mongodb', 'mongo', 'mysql', 
   'sql', 'nosql', 'git', 'github', 'docker', 'kubernetes', 'aws', 'azure', 'gcp', 'firebase',
   'cloudinary', 'razorpay', 'stripe', 'tailwindcss', 'bootstrap', 'sass', 'webpack', 'babel',
-  'npm', 'yarn', 'jest', 'typescript', 'graphql', 'apollo', 'prisma', 'mongoose', 'odm',
+  'npm', 'yarn', 'jest', 'typescript', 'graphql', 'apollo', 'prisma', 'mongoose', 'odm', 
   'orm', 'jwt', 'oauth', 'ssl', 'tls', 'cdn', 'seo', 'rest', 'json', 'xml', 'yaml', 'regex',
   'async', 'middleware', 'mern', 'mean', 'mevn', 'readme', 'cgpa', 'gpa', 'btech', 'mtech',
   'frontend', 'backend', 'fullstack', 'devops', 'agile', 'scrum', 'ci', 'cd', 'ui', 'ux',
   // Common locations & institutions (expand based on your user base)
   'noida', 'gurgaon', 'gurugram', 'bangalore', 'bengaluru', 'hyderabad', 'pune', 'mumbai',
-  'delhi', 'chennai', 'kolkata', 'ggsipu', 'ipu', 'dtu', 'nsit', 'iit', 'nit', 'iiit',
-  'bits', 'vit', 'manipal', 'thapar', 'lpu', 'linkedin', 'gmail', 'reactjs', 'php', 'oop', 'handson', 'ubuntu',
-  'expressjs',
-  'serverside',
-  'eventdriven',
-  'techstack',
-  'signup',
-  'userspecific',
-  'realworld',
-  'utilityfirst',
-  'nonproduction',
-  'asyncawait', 'annes', 'admin', 'impactful'  // Add more as needed from your false positive logs
+  'delhi', 'chennai', 'kolkata', 'ggsipu', 'ipu', 'dtu', 'nsit', 'iit', 'nit', 'iiit', 
+  'bits', 'vit', 'manipal', 'thapar', 'lpu', 'linkedin', 'gmail','reactjs','php','oop','handson','ubuntu',
+'expressjs',
+'serverside',
+'eventdriven',
+'techstack',
+'signup',
+'userspecific',
+'realworld',
+'utilityfirst',
+'nonproduction',
+'asyncawait','annes','admin','impactful'  // Add more as needed from your false positive logs
 ]);
 
 function segmentWord(word, dictionary) {
@@ -105,8 +106,8 @@ const getMisspelledWords = (text) =>
         if (/^[A-Z]{2,}$/.test(original)) continue;
 
         // Skip capitalized resume header names
-        if (/^[A-Z][a-z]+$/.test(original))
-          continue;
+if (/^[A-Z][a-z]+$/.test(original))
+    continue;
 
         // Too short
         if (word.length <= 2) continue;
@@ -121,17 +122,17 @@ const getMisspelledWords = (text) =>
         if (word.endsWith("elling")) continue;
 
         // ========= SPELL CHECK =========
-        // ========= SPELL CHECK =========
-        if (!dictionary.spellCheck(word)) {
+       // ========= SPELL CHECK =========
+if (!dictionary.spellCheck(word)) {
 
-          const segmented = segmentWord(word, dictionary);
+  const segmented = segmentWord(word, dictionary);
 
-          // Accept if valid compound
-          if (!segmented) {
-            mistakes.add(word);
-          }
+  // Accept if valid compound
+  if (!segmented) {
+    mistakes.add(word);
+  }
 
-        }
+}
 
 
       }
@@ -167,34 +168,6 @@ export const saveResume = async (req, res) => {
       success: false,
       error: error.message,
     });
-  }
-};
-
-/* =====================================================
-/* =====================================================
-   GET ALL USER RESUMES
-===================================================== */
-export const getAllUserResumes = async (req, res) => {
-  try {
-    const resumes = await Resume.find({ user: req.userId }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, count: resumes.length, data: resumes });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-/* =====================================================
-   GET USER RESUME (Latest)
-===================================================== */
-export const getUserResume = async (req, res) => {
-  try {
-    const resume = await Resume.findOne({ user: req.userId }).sort({ createdAt: -1 });
-    if (!resume) {
-      return res.status(404).json({ success: false, message: "Resume not found" });
-    }
-    res.status(200).json({ success: true, data: resume });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -238,22 +211,6 @@ export const generateAIResume = async (req, res) => {
 };
 
 /* =====================================================
-/* =====================================================
-   GET RESUME BY ID
-===================================================== */
-export const getResumeById = async (req, res) => {
-  try {
-    const resume = await Resume.findOne({ _id: req.params.id, user: req.userId });
-    if (!resume) {
-      return res.status(404).json({ success: false, message: "Resume not found" });
-    }
-    res.status(200).json({ success: true, data: resume });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-/* =====================================================
    UPLOAD & ANALYZE RESUME (ATS Scan)
    Uploads a resume, parses it, analyzes ATS compatibility,
    saves results to MongoDB
@@ -287,27 +244,19 @@ export const uploadAndAnalyzeResume = async (req, res) => {
     const extractedData = extractResumeData(resumeText);
 
     // ATS analysis
-    const { jobTitle, templateId, resumeprofileId } = req.body;
-    const jobDescription =
-      typeof req.body.jobDescription === "string"
-        ? req.body.jobDescription.trim()
-        : "";
-
-    const analysis = analyzeATSCompatibility(
-      resumeText, extractedData,
-      jobDescription,
-      file.originalname.split(".").pop());
-
+    const analysis = analyzeATSCompatibility(resumeText, extractedData);
     const misspelledWords = await getMisspelledWords(resumeText);
-    analysis.misspelledWords = misspelledWords;
+analysis.misspelledWords = misspelledWords;
+   
     const passes = passesATSThreshold(analysis.overallScore);
     const recommendations = generateRecommendations(analysis);
 
     // Validate required fields from frontend
+    const { jobTitle, templateId, resumeprofileId } = req.body;
     if (!jobTitle || !templateId || !resumeprofileId) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields"
+      return res.status(400).json({ 
+        success: false, 
+        message: "Missing required fields" 
       });
     }
 
@@ -316,7 +265,7 @@ export const uploadAndAnalyzeResume = async (req, res) => {
       userId,
       filename: file.filename,
       originalName: file.originalname,
-      filePath: `/uploads/resumes/${file.filename}`,
+     filePath: `/uploads/resumes/${file.filename}`,
       fileSize: file.size,
       fileType: file.mimetype,
       overallScore: analysis.overallScore,
@@ -331,10 +280,6 @@ export const uploadAndAnalyzeResume = async (req, res) => {
       resumeprofileId: new mongoose.Types.ObjectId(resumeprofileId),
       jobTitle,
     });
-    console.log("✅ ATS RESPONSE DATA:", {
-      overallScore: analysis.overallScore,
-      sectionScores: analysis.sectionScores.length,
-    });
 
     await atsScan.save();
 
@@ -344,7 +289,7 @@ export const uploadAndAnalyzeResume = async (req, res) => {
       data: {
         scanId: atsScan._id,
 
-        filename: file.filename,
+         filename: file.filename,
         originalName: file.originalname,
         filePath: atsScan.filePath,
         overallScore: analysis.overallScore,
@@ -356,9 +301,9 @@ export const uploadAndAnalyzeResume = async (req, res) => {
         passThreshold: passes,
         extractedData,
         metrics: analysis.metrics,
-        text: resumeText,
+        text: resumeText, 
         misspelledWords: analysis.misspelledWords,
-
+      
       },
     });
   } catch (error) {
