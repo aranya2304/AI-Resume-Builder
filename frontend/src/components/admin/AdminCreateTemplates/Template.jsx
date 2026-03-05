@@ -1,7 +1,9 @@
 import React from "react";
-import { Filter, Plus, Eye, X, Power, PowerOff } from "lucide-react";
+import { Filter, Plus, Eye, X, Power, PowerOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { TEMPLATES } from "../../user/Templates/TemplateRegistry";
 import { templates as CV_LIST } from "../../user/CV/Templatesgallery";
+import CVTemplates from "../../user/CV/Cvtemplates";
+import mergeWithSampleData from "../../../utils/Datahelpers";
 import axiosInstance from "../../../api/axios";
 import TemplateTypeSwitch from "./TemplateTypeSwitch";
 
@@ -50,12 +52,13 @@ export default function AdminTemplates() {
           previewText: tpl.description || tpl.category,
           image: tpl.thumbnail || CV_PLACEHOLDER,
           isStatic: !!tpl.thumbnail,
+          templateId: tpl.id,
         }));
 
       setApprovedTemplates({
-        "Modern Templates": mapToAdminFormat(modern),
+        "Contemporary Templates": mapToAdminFormat(modern),
         "Creative Templates": mapToAdminFormat(creative),
-        "Professional Templates": mapToAdminFormat(professional),
+        "Traditional Templates": mapToAdminFormat(professional),
       });
 
       setPendingTemplates([]);
@@ -89,8 +92,8 @@ export default function AdminTemplates() {
     }
   };
 
-  const handlePreview = (imageUrl) => {
-    setPreviewImage(imageUrl);
+  const handlePreview = (tpl) => {
+    setPreviewImage(tpl);
     setIsPreviewModalOpen(true);
   };
 
@@ -140,33 +143,48 @@ export default function AdminTemplates() {
 
         {/* Pending Reviews */}
         {pendingTemplates.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-4 mb-10">
             <h2 className="text-lg font-semibold text-orange-600">
               Pending Reviews ({pendingTemplates.length})
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="flex gap-6 overflow-x-auto pb-6 pt-2 px-2 -mx-2 scroll-smooth scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {pendingTemplates.map((tpl) => (
                 <div
                   key={tpl._id}
-                  className="bg-orange-50 border border-orange-200 rounded-xl p-3"
+                  className="min-w-[260px] w-[260px] bg-orange-50 border border-orange-200 rounded-xl p-3 flex-shrink-0"
                 >
                   <div className="relative w-full aspect-[210/297] bg-white rounded-lg overflow-hidden mb-3">
-                   <img
-  src={tpl.image}
-  alt={tpl.name}
-  className="w-full h-full object-cover"
-  onError={(e) => {
-    e.target.src = CV_PLACEHOLDER;
-  }}
-/>
+                    {type === "resume" || tpl.isStatic ? (
+                      <img
+                        src={tpl.image}
+                        alt={tpl.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = CV_PLACEHOLDER;
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          transform: "scale(0.32)",
+                          transformOrigin: "top left",
+                          width: 794,
+                        }}
+                      >
+                        {CVTemplates[tpl.templateId] &&
+                          React.createElement(CVTemplates[tpl.templateId], { formData: mergeWithSampleData({}) })
+                        }
+                      </div>
+                    )}
                   </div>
-                  <h3 className="text-sm font-semibold text-slate-800">
+                  <h3 className="text-sm font-semibold text-slate-800 truncate">
                     {tpl.name}
                   </h3>
                   <p className="text-xs text-slate-500 mb-2">{tpl.category}</p>
                   <div className="flex gap-2 mt-2">
                     <button
-                      onClick={() => handlePreview(tpl.imageUrl)}
+                      onClick={() => handlePreview(tpl)}
                       className="flex-1 py-1.5 flex items-center justify-center gap-1 bg-white border border-slate-200 text-slate-600 rounded text-xs hover:bg-slate-50"
                     >
                       <Eye size={14} /> Preview
@@ -179,114 +197,189 @@ export default function AdminTemplates() {
           </div>
         )}
 
-        {/* Sections */}
-        {Object.entries(approvedTemplates).map(
-          ([section, templates]) =>
-            templates.length > 0 && (
-              <div key={section} className="space-y-4">
+        {/* Template Section Component */}
+        {(() => {
+          const TemplateSection = ({ title, templates, isTemplateActive, handlePreview, handleToggleStatus, type, CVTemplates, mergeWithSampleData, CV_PLACEHOLDER }) => {
+            const scrollRef = React.useRef(null);
+
+            const scroll = (direction) => {
+              if (scrollRef.current) {
+                const { current } = scrollRef;
+                const scrollAmount = 300; // Card width + gap approximate
+                if (direction === 'left') {
+                  current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                } else {
+                  current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                }
+              }
+            };
+
+            return (
+              <div className="space-y-4 mb-10">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-slate-800">
-                    {section}
+                    {title}
                   </h2>
-                  <button className="text-sm text-blue-600 hover:underline">
-                    View All ({templates.length})
-                  </button>
+                  <span className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                    {templates.length}
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {templates.map((tpl, index) => {
-                    const active = isTemplateActive(tpl._id);
-                    return (
-                      <div
-                        key={index}
-                        className={`bg-white border rounded-xl p-3 transition relative ${active
-                          ? "border-slate-200 hover:shadow-lg"
-                          : "border-slate-100 opacity-75 grayscale-[0.5]"
-                          }`}
-                      >
-                        {/* Status Badge */}
+                <div className="relative group/section">
+                  {/* Left Button */}
+                  <button
+                    onClick={() => scroll('left')}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-20 w-10 h-10 bg-white border border-slate-200 shadow-lg rounded-full flex items-center justify-center text-slate-700 opacity-0 group-hover/section:opacity-100 transition-all duration-200 hover:bg-slate-50 hover:scale-110"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+
+                  {/* Scroll Container */}
+                  <div
+                    ref={scrollRef}
+                    className="flex gap-6 overflow-x-auto pb-6 pt-2 px-2 -mx-2 scroll-smooth scrollbar-hide"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  >
+                    {templates.map((tpl, index) => {
+                      const active = isTemplateActive(tpl._id);
+                      return (
                         <div
-                          className={`absolute top-5 right-5 z-10 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm ${active
-                            ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                            : "bg-slate-100 text-slate-500 border-slate-200"
+                          key={index}
+                          className={`min-w-[260px] w-[260px] bg-white border rounded-xl p-3 transition relative flex-shrink-0 ${active
+                            ? "border-slate-200 hover:shadow-lg"
+                            : "border-slate-100 opacity-75 grayscale-[0.5]"
                             }`}
                         >
-                          {active ? "Active" : "Inactive"}
-                        </div>
-
-                        {/* Preview */}
-                        <div
-                          className="relative w-full aspect-[210/297] bg-slate-100 rounded-lg overflow-hidden cursor-pointer"
-                          onClick={() => handlePreview(tpl.image)}
-                        >
-                         <img
-  src={tpl.image}
-  alt={tpl.name}
-  className="w-full h-full object-cover"
-  onError={(e) => {
-    e.target.onerror = null; // prevent infinite loop
-    e.target.src = CV_PLACEHOLDER;
-  }}
-/>
-                          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
-                            <Eye
-                              className="text-white drop-shadow-md"
-                              size={32}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Info */}
-                        <div className="mt-3 space-y-1">
-                          <h3 className="text-sm font-semibold text-slate-800">
-                            {tpl.name}
-                          </h3>
-                          <p
-                            className="text-xs text-slate-500 truncate"
-                            title={tpl.previewText}
-                          >
-                            {tpl.previewText}
-                          </p>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
-                          <button
-                            onClick={() =>
-                              window.open(
-                                type === "resume"
-                                  ? `/admin/resume-editor?id=${tpl._id}`
-                                  : `/admin/cv-editor?id=${tpl._id}`,
-                                "_blank",
-                              )
-                            }
-                            className="flex-1 py-1.5 flex items-center justify-center gap-1 bg-slate-50 text-slate-600 rounded text-xs hover:bg-slate-100 font-medium transition"
-                          >
-                            <Eye size={14} />
-                            View
-                          </button>
-                          <button
-                            onClick={() => handleToggleStatus(tpl._id)}
-                            className={`flex-1 py-1.5 flex items-center justify-center gap-1 rounded text-xs font-medium transition ${active
-                              ? "bg-red-50 text-red-600 hover:bg-red-100"
-                              : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                          {/* Status Badge */}
+                          <div
+                            className={`absolute top-4 right-4 z-10 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm ${active
+                              ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                              : "bg-slate-100 text-slate-500 border-slate-200"
                               }`}
                           >
-                            {active ? (
-                              <PowerOff size={14} />
+                            {active ? "Active" : "Inactive"}
+                          </div>
+
+                          {/* Preview Container */}
+                          <div
+                            className="relative w-full aspect-[210/297] bg-slate-100 rounded-lg overflow-hidden cursor-pointer"
+                            onClick={() => handlePreview(tpl)}
+                          >
+                            {type === "resume" || tpl.isStatic ? (
+                              <img
+                                src={tpl.image}
+                                alt={tpl.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = CV_PLACEHOLDER;
+                                }}
+                              />
                             ) : (
-                              <Power size={14} />
+                              <div
+                                className="absolute inset-0 pointer-events-none bg-white"
+                                style={{
+                                  transform: "scale(0.32)", // Adjusted for 260px width
+                                  transformOrigin: "top left",
+                                  width: 794,
+                                }}
+                              >
+                                {CVTemplates[tpl.templateId] &&
+                                  React.createElement(CVTemplates[tpl.templateId], { formData: mergeWithSampleData({}) })
+                                }
+                              </div>
                             )}
-                            {active ? "Disable" : "Enable"}
-                          </button>
+                            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+                              <Eye
+                                className="text-white drop-shadow-md"
+                                size={32}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Info */}
+                          <div className="mt-3 space-y-1">
+                            <h3 className="text-sm font-semibold text-slate-800 truncate">
+                              {tpl.name}
+                            </h3>
+                            <p
+                              className="text-xs text-slate-500 truncate"
+                              title={tpl.previewText}
+                            >
+                              {tpl.previewText}
+                            </p>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+                            <button
+                              onClick={() =>
+                                window.open(
+                                  type === "resume"
+                                    ? `/admin/resume-editor?id=${tpl._id}`
+                                    : `/admin/cv-editor?id=${tpl._id}`,
+                                  "_blank",
+                                )
+                              }
+                              className="flex-1 py-1.5 flex items-center justify-center gap-1 bg-slate-50 text-slate-600 rounded text-xs hover:bg-slate-100 font-medium transition"
+                            >
+                              <Eye size={14} />
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleToggleStatus(tpl._id)}
+                              className={`flex-1 py-1.5 flex items-center justify-center gap-1 rounded text-xs font-medium transition ${active
+                                ? "bg-red-50 text-red-600 hover:bg-red-100"
+                                : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                                }`}
+                            >
+                              {active ? (
+                                <PowerOff size={14} />
+                              ) : (
+                                <Power size={14} />
+                              )}
+                              {active ? "Disable" : "Enable"}
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+
+                  {/* Right Button */}
+                  <button
+                    onClick={() => scroll('right')}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-20 w-10 h-10 bg-white border border-slate-200 shadow-lg rounded-full flex items-center justify-center text-slate-700 opacity-0 group-hover/section:opacity-100 transition-all duration-200 hover:bg-slate-50 hover:scale-110"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
                 </div>
               </div>
-            ),
-        )}
+            );
+          };
+
+          return (
+            <>
+              {Object.entries(approvedTemplates).map(
+                ([section, templates]) =>
+                  templates.length > 0 && (
+                    <TemplateSection
+                      key={section}
+                      title={section}
+                      templates={templates}
+                      isTemplateActive={isTemplateActive}
+                      handlePreview={handlePreview}
+                      handleToggleStatus={handleToggleStatus}
+                      type={type}
+                      CVTemplates={CVTemplates}
+                      mergeWithSampleData={mergeWithSampleData}
+                      CV_PLACEHOLDER={CV_PLACEHOLDER}
+                    />
+                  )
+              )}
+            </>
+          );
+        })()}
 
         {/* Preview Modal */}
         {isPreviewModalOpen && (
@@ -295,20 +388,29 @@ export default function AdminTemplates() {
             onClick={() => setIsPreviewModalOpen(false)}
           >
             <div
-              className="relative bg-white rounded-lg shadow-2xl max-w-4xl max-h-[90vh] overflow-auto animate-scaleIn"
+              className={`relative bg-white rounded-lg shadow-2xl max-h-[90vh] overflow-auto animate-scaleIn ${type === "resume" || (previewImage && previewImage.isStatic) ? "max-w-4xl" : "flex justify-center bg-slate-200/60 p-6"}`}
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setIsPreviewModalOpen(false)}
-                className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition"
+                className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition z-[60]"
               >
                 <X size={20} />
               </button>
-              <img
-                src={previewImage}
-                alt="Template Preview"
-                className="w-full h-auto block"
-              />
+
+              {type === "resume" || (previewImage && previewImage.isStatic) ? (
+                <img
+                  src={previewImage.image || previewImage}
+                  alt="Template Preview"
+                  className="w-full h-auto block"
+                />
+              ) : (
+                <div className="shadow-xl bg-white rounded-sm overflow-hidden" style={{ width: 794, minHeight: 1123, flexShrink: 0 }}>
+                  {previewImage && CVTemplates[previewImage.templateId] &&
+                    React.createElement(CVTemplates[previewImage.templateId], { formData: mergeWithSampleData({}) })
+                  }
+                </div>
+              )}
             </div>
           </div>
         )}

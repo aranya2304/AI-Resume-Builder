@@ -253,7 +253,7 @@ function LandingPage() {
       icon: <Layout className="text-green-600 size-6" />,
       title: "Categorized Templates",
       description:
-        "Access a curated library of Modern, Creative, and Professional templates tailored for every industry.",
+        "Access a curated library of Contemporary, Creative, and Traditional templates tailored for every industry.",
       path: "/TemplatesFeature",
     },
     {
@@ -444,10 +444,8 @@ function LandingPage() {
             {howItWorksSteps.map((step, index) => (
               <motion.div
                 key={index}
-                variants={fadeUp}
-                className={`flex flex-col md:flex-row items-center gap-6 md:gap-12 ${
-                  index % 2 !== 0 ? "md:flex-row-reverse" : ""
-                }`}
+                className={`flex flex-col md:flex-row items-center gap-6 md:gap-12 ${index % 2 !== 0 ? "md:flex-row-reverse" : ""
+                  }`}
               >
                 {/* MOBILE BADGE - Hidden on Desktop */}
                 <div className="absolute top-4 left-4 md:hidden bg-[#0077cc] text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
