@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Activity,
@@ -22,6 +22,28 @@ import NavBar from "../components/NavBar";
 import Footer from "./Footer";
 import write from "../assets/Live.png";
 
+// Scroll animation hook
+const useInView = (threshold = 0.15) => {
+  const ref = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setIsVisible(true);
+      },
+      { threshold }
+    );
+
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return [ref, isVisible];
+};
+
 const ScoreChecker = () => {
   const navigate = useNavigate();
   const isLoggedIn = typeof window !== "undefined" && !!localStorage.getItem("token");
@@ -40,6 +62,14 @@ const ScoreChecker = () => {
   );
 
   const [openFaq, setOpenFaq] = useState(0);
+
+  const [heroRef, heroVisible] = useInView(0.2);
+const [demoRef, demoVisible] = useInView(0.15);
+const [breakRef, breakVisible] = useInView(0.15);
+const [calcRef, calcVisible] = useInView(0.15);
+const [whyRef, whyVisible] = useInView(0.15);
+const [faqRef, faqVisible] = useInView(0.15);
+const [ctaRef, ctaVisible] = useInView(0.2);
 
   const scoreValue = useMemo(() => {
     const len = text.trim().length;
@@ -85,7 +115,12 @@ const ScoreChecker = () => {
       <NavBar />
 
       {/* 1) HERO SECTION (Centered, distinct from ATS) */}
-      <section className="relative px-6 pt-20 pb-16 bg-white overflow-hidden">
+      <section
+  ref={heroRef}
+  className={`relative px-6 pt-20 pb-16 bg-white overflow-hidden transition-all duration-700 ${
+    heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+  }`}
+>
         <div className="mx-auto max-w-7xl">
           <div className="grid items-center gap-12 lg:grid-cols-2">
 
@@ -126,7 +161,12 @@ const ScoreChecker = () => {
 
 
       {/* 2) MAIN LIVE DEMO (Split Layout) */}
-      <section className="px-6 py-10">
+      <section
+  ref={demoRef}
+  className={`px-6 py-10 transition-all duration-700 ${
+    demoVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+  }`}
+>
         <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-8 items-start">
 
           {/* LEFT: Live Editor Mock */}
@@ -273,7 +313,12 @@ const ScoreChecker = () => {
       </section>
 
       {/* 3) SECTION SCORE TILES */}
-      <section className="px-6 py-12 bg-white">
+      <section
+  ref={breakRef}
+  className={`px-6 py-12 bg-white transition-all duration-700 ${
+    breakVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+  }`}
+>
         <div className="max-w-7xl mx-auto">
           <h2 className="text-2xl font-black text-[#1a2e52] mb-8 text-center md:text-left">
             Detailed Breakdown
@@ -301,7 +346,12 @@ const ScoreChecker = () => {
       </section>
 
       {/* 4) HOW WE CALCULATE (New Section) */}
-      <section className="px-6 py-20 bg-gray-50/50">
+     <section
+  ref={calcRef}
+  className={`px-6 py-20 bg-gray-50/50 transition-all duration-700 ${
+    calcVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+  }`}
+>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-black text-[#1a2e52]">How We Calculate Your Score</h2>
@@ -358,7 +408,12 @@ const ScoreChecker = () => {
       </section>
 
       {/* 5) WHY IT MATTERS (New Section) */}
-      <section className="px-6 py-20 bg-white">
+      <section
+  ref={whyRef}
+  className={`px-6 py-20 bg-white transition-all duration-700 ${
+    whyVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+  }`}
+>
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="text-3xl md:text-5xl font-black text-[#1a2e52] leading-tight mb-8">
@@ -422,7 +477,12 @@ const ScoreChecker = () => {
       </section>
 
       {/* 6) FAQ (New Section) */}
-      <section className="px-6 py-20 bg-[#F8F9FC]">
+      <section
+  ref={faqRef}
+  className={`px-6 py-20 bg-[#F8F9FC] transition-all duration-700 ${
+    faqVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+  }`}
+>
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl font-black text-center text-[#1a2e52] mb-12">Frequently Asked Questions</h2>
           <div className="space-y-4">
@@ -456,7 +516,12 @@ const ScoreChecker = () => {
       </section>
 
       {/* CTA (keeps your style) */}
-      <section className="relative px-8 py-20 overflow-hidden bg-white text-center">
+      <section
+  ref={ctaRef}
+  className={`relative px-8 py-20 overflow-hidden bg-white text-center transition-all duration-700 ${
+    ctaVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+  }`}
+>
         <div className="absolute top-0 right-0 w-1/3 h-full bg-orange-50 rounded-full blur-[120px] -z-10 opacity-60" />
         <div className="absolute bottom-0 left-0 w-1/3 h-full bg-blue-50 rounded-full blur-[120px] -z-10 opacity-60" />
 
