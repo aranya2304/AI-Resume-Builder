@@ -211,197 +211,129 @@ export default function AdminTemplates() {
         )}
 
         {/* Sections */}
-        {Object.entries(approvedTemplates).map(
-          ([section, templates]) => {
-            const filtered = templates.filter(tpl => {
-              const matchesSearch = tpl.name.toLowerCase().includes(search.toLowerCase());
-              const active = isTemplateActive(tpl._id);
-              const matchesStatus = statusFilter === "all" ||
-                (statusFilter === "active" && active) ||
-                (statusFilter === "inactive" && !active);
-              return matchesSearch && matchesStatus;
-            });
+        {Object.entries(approvedTemplates).map(([section, templates]) => {
+          const filtered = templates.filter(tpl => {
+            const matchesSearch = tpl.name.toLowerCase().includes(search.toLowerCase());
+            const active = isTemplateActive(tpl._id);
+            const matchesStatus = statusFilter === "all" ||
+              (statusFilter === "active" && active) ||
+              (statusFilter === "inactive" && !active);
+            return matchesSearch && matchesStatus;
+          });
 
-            return filtered.length > 0 && (
-              <div key={section} className="space-y-4 animate-in fade-in duration-500">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-lg font-bold text-slate-800 tracking-tight">
-                      {section}
-                    </h2>
-                    <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-bold uppercase">
-                      {filtered.length} Items
-                    </span>
-                  </div>
-                  <button className="text-sm text-blue-600 hover:underline font-medium">
-                    View All
-                  </button>
+          return filtered.length > 0 && (
+            <div key={section} className="space-y-4 animate-in fade-in duration-500">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                    {section}
+                  </h2>
+                  <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-bold uppercase">
+                    {filtered.length} Items
+                  </span>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {filtered.map((tpl, index) => {
-                    const active = isTemplateActive(tpl._id);
-                    return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {filtered.map((tpl, index) => {
+                  const active = isTemplateActive(tpl._id);
+                  return (
+                    <div
+                      key={index}
+                      className={`bg-white border rounded-xl p-3 transition relative ${active
+                        ? "border-slate-200 hover:shadow-lg"
+                        : "border-slate-100 opacity-75 grayscale-[0.5]"
+                        }`}
+                    >
+                      {/* Status Badge */}
                       <div
-                        key={index}
-                        className={`bg-white border rounded-xl p-3 transition relative ${active
-                          ? "border-slate-200 hover:shadow-lg"
-                          : "border-slate-100 opacity-75 grayscale-[0.5]"
+                        className={`absolute top-5 right-5 z-10 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm ${active
+                          ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                          : "bg-slate-100 text-slate-500 border-slate-200"
                           }`}
                       >
-                        {/* Status Badge */}
-                        <div
-                          className={`absolute top-5 right-5 z-10 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm ${active
-                            ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                            : "bg-slate-100 text-slate-500 border-slate-200"
-                            }`}
-                        >
-                          {active ? "Active" : "Inactive"}
-                        </div>
+                        {active ? "Active" : "Inactive"}
+                      </div>
 
-                  {/* Scroll Container */}
-                  <div
-                    ref={scrollRef}
-                    className="flex gap-6 overflow-x-auto pb-6 pt-2 px-2 -mx-2 scroll-smooth scrollbar-hide"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                  >
-                    {templates.map((tpl, index) => {
-                      const active = isTemplateActive(tpl._id);
-                      return (
-                        <div
-                          key={index}
-                          className={`min-w-[260px] w-[260px] bg-white border rounded-xl p-3 transition relative flex-shrink-0 ${active
-                            ? "border-slate-200 hover:shadow-lg"
-                            : "border-slate-100 opacity-75 grayscale-[0.5]"
-                            }`}
-                        >
+                      {/* Preview Container */}
+                      <div
+                        className="relative w-full aspect-[210/297] bg-slate-100 rounded-lg overflow-hidden cursor-pointer group"
+                        onClick={() => handlePreview(tpl)}
+                      >
+                        {type === "resume" || tpl.isStatic ? (
                           <img
                             src={tpl.image}
                             alt={tpl.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              e.target.onerror = null; // prevent infinite loop
+                              e.target.onerror = null;
                               e.target.src = CV_PLACEHOLDER;
                             }}
                           />
-                          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
-                            <Eye
-                              className="text-white drop-shadow-md"
-                              size={32}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Info */}
-                        <div className="mt-3 space-y-1">
-                          <h3 className="text-sm font-semibold text-slate-800">
-                            {tpl.name}
-                          </h3>
-                          <p
-                            className="text-xs text-slate-500 truncate"
-                            title={tpl.previewText}
-                          >
-                            {active ? "Active" : "Inactive"}
-                          </div>
-
-                          {/* Preview Container */}
+                        ) : (
                           <div
-                            className="relative w-full aspect-[210/297] bg-slate-100 rounded-lg overflow-hidden cursor-pointer"
-                            onClick={() => handlePreview(tpl)}
+                            className="absolute inset-0 pointer-events-none bg-white origin-top-left"
+                            style={{
+                              transform: "scale(0.32)", // Approx scale for the preview
+                              width: 794,
+                            }}
                           >
-                            {type === "resume" || tpl.isStatic ? (
-                              <img
-                                src={tpl.image}
-                                alt={tpl.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = CV_PLACEHOLDER;
-                                }}
-                              />
-                            ) : (
-                              <div
-                                className="absolute inset-0 pointer-events-none bg-white"
-                                style={{
-                                  transform: "scale(0.32)", // Adjusted for 260px width
-                                  transformOrigin: "top left",
-                                  width: 794,
-                                }}
-                              >
-                                {CVTemplates[tpl.templateId] &&
-                                  React.createElement(CVTemplates[tpl.templateId], { formData: mergeWithSampleData({}) })
-                                }
-                              </div>
-                            )}
-                            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
-                              <Eye
-                                className="text-white drop-shadow-md"
-                                size={32}
-                              />
-                            </div>
+                            {CVTemplates[tpl.templateId] &&
+                              React.createElement(CVTemplates[tpl.templateId], { formData: mergeWithSampleData({}) })
+                            }
                           </div>
-
-                          {/* Info */}
-                          <div className="mt-3 space-y-1">
-                            <h3 className="text-sm font-semibold text-slate-800 truncate">
-                              {tpl.name}
-                            </h3>
-                            <p
-                              className="text-xs text-slate-500 truncate"
-                              title={tpl.previewText}
-                            >
-                              {tpl.previewText}
-                            </p>
-                          </div>
-
-                          {/* Actions */}
-                          <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
-                            <button
-                              onClick={() =>
-                                window.open(
-                                  type === "resume"
-                                    ? `/admin/resume-editor?id=${tpl._id}`
-                                    : `/admin/cv-editor?id=${tpl._id}`,
-                                  "_blank",
-                                )
-                              }
-                              className="flex-1 py-1.5 flex items-center justify-center gap-1 bg-slate-50 text-slate-600 rounded text-xs hover:bg-slate-100 font-medium transition"
-                            >
-                              <Eye size={14} />
-                              View
-                            </button>
-                            <button
-                              onClick={() => handleToggleStatus(tpl._id)}
-                              className={`flex-1 py-1.5 flex items-center justify-center gap-1 rounded text-xs font-medium transition ${active
-                                ? "bg-red-50 text-red-600 hover:bg-red-100"
-                                : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                                }`}
-                            >
-                              {active ? (
-                                <PowerOff size={14} />
-                              ) : (
-                                <Power size={14} />
-                              )}
-                              {active ? "Disable" : "Enable"}
-                            </button>
-                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <Eye className="text-white drop-shadow-md" size={32} />
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
 
-                  {/* Right Button */}
-                  <button
-                    onClick={() => scroll('right')}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-20 w-10 h-10 bg-white border border-slate-200 shadow-lg rounded-full flex items-center justify-center text-slate-700 opacity-0 group-hover/section:opacity-100 transition-all duration-200 hover:bg-slate-50 hover:scale-110"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
-                </div>
+                      {/* Info */}
+                      <div className="mt-3 space-y-1">
+                        <h3 className="text-sm font-semibold text-slate-800 truncate">
+                          {tpl.name}
+                        </h3>
+                        <p
+                          className="text-xs text-slate-500 truncate"
+                          title={tpl.previewText}
+                        >
+                          {tpl.previewText}
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+                        <button
+                          onClick={() =>
+                            window.open(
+                              type === "resume"
+                                ? `/admin/resume-editor?id=${tpl._id}`
+                                : `/admin/cv-editor?id=${tpl._id}`,
+                              "_blank",
+                            )
+                          }
+                          className="flex-1 py-1.5 flex items-center justify-center gap-1 bg-slate-50 text-slate-600 rounded text-xs hover:bg-slate-100 font-medium transition"
+                        >
+                          <Eye size={14} /> View
+                        </button>
+                        <button
+                          onClick={() => handleToggleStatus(tpl._id)}
+                          className={`flex-1 py-1.5 flex items-center justify-center gap-1 rounded text-xs font-medium transition ${active
+                            ? "bg-red-50 text-red-600 hover:bg-red-100"
+                            : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                            }`}
+                        >
+                          {active ? <PowerOff size={14} /> : <Power size={14} />}
+                          {active ? "Disable" : "Enable"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          }
-        )}
+            </div>
+          );
+        })}
 
         {/* Preview Modal */}
         {isPreviewModalOpen && (
