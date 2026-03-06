@@ -16,6 +16,7 @@ import templateRouter from "./routers/template.router.js";
 import resumeRouter from "./routers/resume.router.js";
 import templateVisibilityRouter from "./routers/templateVisibility.router.js";
 import planRouter from "./routers/plan.router.js";
+import blogRouter from "./routers/blog.router.js";
 
 import downloadsRouter from "./routers/downloads.router.js";
 import coverLetterRouter from "./routers/coverletter.js";  // ✅ NEW
@@ -69,6 +70,7 @@ app.use("/api/resume", resumeRouter);
 app.use("/api/coverletter", coverLetterRouter);  // ✅ NEW
 app.use("/api/template-visibility", templateVisibilityRouter);
 app.use("/api/plans", planRouter);
+app.use("/api/blog", blogRouter);
 app.use("/api/chatbot", chatbotRouter);
 
 // Serve uploads directory (for images/resumes)
