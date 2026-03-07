@@ -95,11 +95,13 @@ const EditProfile = () => {
                   ? formData.fullName
                     .trim()
                     .split(" ")
-                    .filter(Boolean)                // remove empty strings
+                    .filter(Boolean)
                     .slice(0, 2)
                     .map((n) => n.charAt(0).toUpperCase())
                     .join("")
-                  : "?"}
+                  : formData.username?.trim()
+                    ? formData.username.trim().charAt(0).toUpperCase()
+                    : "?"}
               </div>
             </div>
 
