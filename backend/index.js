@@ -23,6 +23,7 @@ import dashboardRouter from "./routers/dashboard.router.js";
 
 import chatbotRouter from "./routers/chatbot.router.js";
 
+import adminRouter from "./routers/admin.router.js";
 
 // Config
 import connectDB from "./config/db.js";
@@ -72,7 +73,7 @@ app.use("/api/template-visibility", templateVisibilityRouter);
 app.use("/api/plans", planRouter);
 app.use("/api/chatbot", chatbotRouter);
 app.use("/api/dashboard", dashboardRouter);
-
+app.use("/api/admin",adminRouter);
 // Serve uploads directory (for images/resumes)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 

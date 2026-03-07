@@ -68,10 +68,11 @@ export default function AdminDashboard() {
     },
   ];
 
-  const fetchTotalUser = async () => {
+  useEffect(()=>{
+    const fetchTotalUser = async () => {
     try {
       const result = await axiosInstance.get(
-        "/api/user/dashboard-stat"
+        "/api/admin/dashboard-stat"
       );
 
       setTotalUser(result.data?.users?.total || 0);
@@ -90,10 +91,12 @@ export default function AdminDashboard() {
       console.error(error);
     }
   };
-
-  useEffect(() => {
     fetchTotalUser();
-  }, []);
+    
+    const fetchInterval = setInterval(()=>{fetchTotalUser()},4000);
+    return() => clearInterval(fetchInterval);
+  },[])
+  
 
   return (
     <div className="bg-slate-50 p-4 sm:p-6">

@@ -21,12 +21,9 @@ export default function AdminAnalytics() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAnalyticsData();
-  }, []);
-
-  const fetchAnalyticsData = async () => {
+     const fetchAnalyticsData = async () => {
     try {
-      const response = await axiosInstance.get("/api/user/analytics-stat");
+      const response = await axiosInstance.get("/api/admin/analytics-stat");
       setUserGrowth(response.data.userGrowth);
       setConversions(response.data.conversions);
       setActiveUsers(response.data.activeUsers);
@@ -47,6 +44,12 @@ export default function AdminAnalytics() {
       setLoading(false);
     }
   };
+    fetchAnalyticsData();
+    const fetchInterval = setInterval(fetchAnalyticsData,30000);
+    return () => clearInterval(fetchInterval); 
+  }, []);
+
+ 
 
   const stats = [
     {
