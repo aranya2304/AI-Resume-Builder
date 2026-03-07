@@ -97,7 +97,7 @@ export default function Security() {
   return (
     <div className="w-full min-h-screen bg-[#f4f6f8]">
       <UserNavBar/>
-      
+
 
       {/* CENTERED CONTENT */}
       <div className="flex items-center justify-center min-h-[calc(100vh-64px)] px-4">

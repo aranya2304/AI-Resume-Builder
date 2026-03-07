@@ -87,7 +87,7 @@ const EditProfile = () => {
       <div className="profile-page-content">
         <div className="profile-container">
 
-          {/* LEFT CARD */}
+            {/* LEFT CARD */}
           <div className="profile-sidebar-card">
             <div className="profile-header-section">
               <div className="avatar-frame">
@@ -104,6 +104,7 @@ const EditProfile = () => {
                   : "?"}
             </div>
             </div>
+
 
             <h2 className="profile-name">
               {formData.username && formData.username.trim()
