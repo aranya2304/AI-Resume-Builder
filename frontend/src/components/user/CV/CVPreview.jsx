@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
+import ReactDOM from "react-dom";
 import {
   Eye,
   Maximize2,
@@ -196,9 +197,10 @@ const CVPreview = ({
     const TemplateComponent = CVTemplates[selectedTemplate];
     if (!TemplateComponent) return;
 
+    let container;
     try {
       // Create hidden container at full A4 width
-      const container = document.createElement("div");
+      container = document.createElement("div");
       Object.assign(container.style, {
         position: "fixed",
         top: "0",
@@ -284,11 +286,10 @@ const CVPreview = ({
       const template = clean(selectedTemplate) || "Template";
 
       pdf.save(`${name}_${template}.pdf`);
-      setIsDownloading(false);
-
-      document.body.removeChild(container);
     } catch (err) {
-      console.error(err);
+      console.error("PDF download error:", err);
+    } finally {
+      if (container && container.parentNode) document.body.removeChild(container);
     }
   };
 
@@ -841,31 +842,25 @@ const CVPreview = ({
     </>
   );
 
-  const getNavbarHeight = () => {
-    const nav = document.getElementById("main-navbar");
-    return nav ? nav.offsetHeight : 0;
-  };
-
   if (isMaximized) {
-    const navHeight = getNavbarHeight();
-
-    return (
+    return ReactDOM.createPortal(
       <div
         ref={rootRef}
         style={{
           position: "fixed",
-          top: navHeight,
+          top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 999,
+          zIndex: 99999,
           display: "flex",
           flexDirection: "column",
           background: "#eef2f7",
         }}
       >
         {inner}
-      </div>
+      </div>,
+      document.body,
     );
   }
 
