@@ -1,3 +1,4 @@
+
 import "./ATSChecker.css";
 import ATSPdfPreview from "./ATSPdfPreview";
 import ATSDocPreview from "./ATSDocPreview";
@@ -49,7 +50,7 @@ function UploadZone({ onFileChange }) {
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 10.5, ease: "easeOut" }}
         className="w-full max-w-lg"
       >
         {/* Header text */}
@@ -320,6 +321,38 @@ function ErrorTable({ errors, type, onSelect }) {
       </div>
     </div>
   );
+}function CircularLoader() {
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <div className="relative w-16 h-16">
+        <motion.div
+          className="absolute inset-0 rounded-full border-4 border-transparent"
+          style={{
+            borderTopColor: "#3b82f6",
+            borderRightColor: "#8b5cf6",
+            borderBottomColor: "#a78bfa",
+          }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 125.2, repeat: Infinity, ease: "linear" }}
+        />
+      </div>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="mt-4 text-sm font-semibold text-slate-700"
+      >
+        Analyzing Resume
+      </motion.p>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 720.2 }}
+        className="text-xs text-slate-400 mt-1"
+      >
+        Checking ATS compatibility...
+      </motion.p>
+    </div>
+  );
 }
 
 /* ═══════════════════ MAIN COMPONENT ═══════════════════ */
@@ -342,6 +375,7 @@ const ATSChecker = ({ onSidebarToggle }) => {
   const [animatedScore, setAnimatedScore] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [previewType, setPreviewType] = useState('pdf');
+  const analysisStartTimeRef = useRef(null);
 
   /* ── Score animation ── */
   useEffect(() => {
@@ -444,8 +478,16 @@ const handleFileChange = async (e) => {
                         file.type === "application/msword" || 
                         file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   
+   setAnalysisResult(null);
+  setAnimatedScore(0);
+  setSpellingErrors([]);
+  setPronounErrors([]);
+  setActiveError(null);
+  setResumeText("");
+  
   setUploadedFile(file);
   setIsAnalyzing(true);
+  analysisStartTimeRef.current = Date.now();
 
   // Support PDF, DOC, and DOCX
   if (file.type === "application/pdf" || fileExtension === 'pdf') {
@@ -527,10 +569,22 @@ const handleFileChange = async (e) => {
       console.error("API returned success: false →", data?.message || data);
     }
   } catch (err) {
-    console.error("ATS fetch failed — is the backend running on port 5000?", err);
-  } finally {
+  console.error("ATS fetch failed — is the backend running on port 5000?", err);
+} finally {
+  // Enforce minimum 5.5 second loading animation
+  const elapsed = Date.now() - analysisStartTimeRef.current;
+  const minDuration = 5500; // 5.5 seconds
+  
+  if (elapsed < minDuration) {
+    setTimeout(() => {
+      setIsAnalyzing(false);
+      analysisStartTimeRef.current = null;
+    }, minDuration - elapsed);
+  } else {
     setIsAnalyzing(false);
+    analysisStartTimeRef.current = null;
   }
+}
 };
   const buildErrorLocationsFromPdf = async (pdf, wrongWords) => {
     if (!pdf || !wrongWords?.length) return [];
@@ -628,79 +682,79 @@ const handleFileChange = async (e) => {
               </div>
             </div>
 
-            <div className="p-5 flex-1 flex flex-col">
-              {/* Score Ring */}
-              {analysisResult ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <ScoreRing score={analysisResult} animated={animatedScore} />
-                </motion.div>
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="rounded-2xl border-2 border-dashed border-slate-100 p-8 text-center w-full">
-                    <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
-                      <Target size={28} className="text-slate-200" />
-                    </div>
-                    <p className="text-sm font-semibold text-slate-400 mb-1">
-                      No resume uploaded yet
-                    </p>
-                    <p className="text-xs text-slate-300">
-                      Upload a resume on the right to see your ATS score here
-                    </p>
-                  </div>
-                </div>
-              )}
+       <div className="p-5 flex-1 flex flex-col">
+  {/* 🔄 LOADING - Shows for same duration as right panel */}
+  {isAnalyzing && uploadedFile ? (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', width: '100%' }}>
+      <div style={{ 
+        width: '50px', 
+        height: '50px', 
+        border: '4px solid #e2e8f0', 
+        borderTop: '4px solid #3b82f6', 
+        borderRadius: '50%', 
+        animation: 'spin 3.5s linear infinite'
+      }} />
+      <p style={{ color: '#475569', fontSize: '14px', fontWeight: '600', marginTop: '16px' }}>
+        Analyzing Resume...
+      </p>
+      <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '8px', animation: 'pulse 5.5s ease-in-out infinite' }}>
+        Checking keywords, formatting & ATS compatibility
+      </p>
+    </div>
+  ) : analysisResult ? (
+    /* ✅ Score Ring - Only show after analysis completes */
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.4 }} key={`score-${uploadedFile?.name}`}>
+      <ScoreRing score={analysisResult} animated={animatedScore} />
+    </motion.div>
+  ) : (
+    /* 📭 Empty State - Show when no file uploaded yet */
+    <div className="flex-1 flex items-center justify-center">
+      <div className="rounded-2xl border-2 border-dashed border-slate-100 p-8 text-center w-full">
+        <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
+          <Target size={28} className="text-slate-200" />
+        </div>
+        <p className="text-sm font-semibold text-slate-400 mb-1">No resume uploaded yet</p>
+        <p className="text-xs text-slate-300">Upload a resume on the right to see your ATS score here</p>
+      </div>
+    </div>
+  )}
 
-              {/* Section Scores */}
-              {analysisResult?.sectionScores?.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-5"
-                >
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
-                    Section Breakdown
-                  </p>
-                  {analysisResult.sectionScores.map((s, i) => (
-                    <SectionCard key={i} section={s} />
-                  ))}
-                </motion.div>
-              )}
+  {/* CSS Animation Keyframes */}
+  <style>{`
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+  `}</style>
 
-              {/* Error Tables */}
-              <AnimatePresence>
-                {spellingErrors.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <ErrorTable
-                      errors={spellingErrors}
-                      type="spell"
-                      onSelect={setActiveError}
-                    />
-                  </motion.div>
-                )}
-                {pronounErrors.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <ErrorTable
-                      errors={pronounErrors}
-                      type="pronoun"
-                      onSelect={setActiveError}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+  {/* Section Scores - Only show after analysis completes */}
+  {!isAnalyzing && analysisResult?.sectionScores?.length > 0 && (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-5">
+      <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Section Breakdown</p>
+      {analysisResult.sectionScores.map((s, i) => (
+        <SectionCard key={`${s.sectionName}-${i}`} section={s} />
+      ))}
+    </motion.div>
+  )}
+
+  {/* Error Tables - Only show after analysis completes */}
+  <AnimatePresence>
+    {!isAnalyzing && spellingErrors.length > 0 && (
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+        <ErrorTable errors={spellingErrors} type="spell" onSelect={setActiveError} />
+      </motion.div>
+    )}
+    {!isAnalyzing && pronounErrors.length > 0 && (
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+        <ErrorTable errors={pronounErrors} type="pronoun" onSelect={setActiveError} />
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
           </div>
         </div>
 
@@ -721,37 +775,55 @@ const handleFileChange = async (e) => {
             />
           </button>
 
-          <AnimatePresence initial={false}>
-            {(isMobilePreviewExpanded || !isMobile) && (
-              <motion.div
-                initial={isMobile ? { height: 0, opacity: 0 } : false}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col"
-                style={{ minHeight: PANEL_HEIGHT }}
-              >
-               {previewUrl ? (
-  <div className="w-full flex-1" style={{ minHeight: PANEL_HEIGHT }}>
-    <ATSPdfPreview
-      pdfUrl={previewUrl}
-      onLoadSuccess={(pdf) => {
-        setNumPages(pdf.numPages);
-        setPdfInstance(pdf);
-      }}
-    />
-  </div>
-) : previewType === 'doc' && resumeText ? (
-  // Show DOC preview with extracted text
-  <div className="w-full flex-1" style={{ minHeight: PANEL_HEIGHT }}>
-    <ATSDocPreview text={resumeText} />
-  </div>
-) : (
-  <UploadZone onFileChange={handleFileChange} />
-)}
-              </motion.div>
-            )}
-          </AnimatePresence>
+           <AnimatePresence initial={false}>
+    {(isMobilePreviewExpanded || !isMobile) && (
+      <motion.div
+        initial={isMobile ? { height: 0, opacity: 0 } : false}
+        animate={{ height: "auto", opacity: 1 }}
+        exit={{ height: 0, opacity: 0 }}
+        transition={{ duration: 2.3 }}
+        className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col"
+        style={{ minHeight: PANEL_HEIGHT }}
+      >
+        {/* Show UploadZone only if no file uploaded yet */}
+        {!uploadedFile ? (
+          <UploadZone onFileChange={handleFileChange} />
+        ) : isAnalyzing ? (
+          /* 🔄 Show loading animation during analysis */
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', width: '100%' }}>
+            <div style={{ 
+              width: '50px', 
+              height: '50px', 
+              border: '4px solid #e2e8f0', 
+              borderTop: '4px solid #3b82f6', 
+              borderRadius: '50%', 
+              animation: 'spin 3.5s linear infinite'
+            }} />
+            <p style={{ color: '#475569', fontSize: '14px', fontWeight: '600', marginTop: '16px' }}>
+              Analyzing Resume...
+            </p>
+            <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '8px', animation: 'pulse 5.5s ease-in-out infinite' }}>
+              Checking keywords, formatting & ATS compatibility
+            </p>
+          </div>
+        ) : previewUrl ? (
+          <div className="w-full flex-1" style={{ minHeight: PANEL_HEIGHT }}>
+            <ATSPdfPreview
+              pdfUrl={previewUrl}
+              onLoadSuccess={(pdf) => {
+                setNumPages(pdf.numPages);
+                setPdfInstance(pdf);
+              }}
+            />
+          </div>
+        ) : previewType === 'doc' && resumeText ? (
+          <div className="w-full flex-1" style={{ minHeight: PANEL_HEIGHT }}>
+            <ATSDocPreview text={resumeText} />
+          </div>
+        ) : null}
+      </motion.div>
+    )}
+  </AnimatePresence>
         </div>
       </div>
 
