@@ -18,14 +18,14 @@ import {
 import {
   parseResume,
   extractResumeData,
-} from "../service/Resumeparser.service.js";
+} from "../service/ResumeParser.service.js";
 
 // ATS Analyzer Services
 import {
   analyzeATSCompatibility,
   generateRecommendations,
   passesATSThreshold,
-} from "../service/Atsanalyzer.service.js";
+} from "../service/AtsAnalyzer.service.js";
 
 import SpellChecker from "simple-spellchecker";
 import nlp from "compromise";
@@ -382,8 +382,8 @@ if (!jobTitle) {
 
     // ✅ FIX: Ensure File Format Compatibility score is correct
     const isValidFormat = ['pdf', 'doc', 'docx'].includes(fileExtension) ||
-                         ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.mimetype);
-    
+      ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.mimetype);
+
     if (analysis.sectionScores) {
       analysis.sectionScores = analysis.sectionScores.map(section => {
         if (section.sectionName === "File Format Compatibility") {
@@ -401,14 +401,15 @@ if (!jobTitle) {
     // ✅ FIX: Recalculate overallScore from sectionScores
     if (analysis.sectionScores && Array.isArray(analysis.sectionScores)) {
       const totalEarned = analysis.sectionScores.reduce(
-        (sum, s) => sum + (typeof s.score === 'number' ? s.score : 0), 
+        (sum, s) => sum + (typeof s.score === 'number' ? s.score : 0),
         0
       );
       const totalPossible = analysis.sectionScores.reduce(
-        (sum, s) => sum + (typeof s.maxScore === 'number' ? s.maxScore : 0), 
+        (sum, s) => sum + (typeof s.maxScore === 'number' ? s.maxScore : 0),
         0
       );
       
+      // Calculate weighted overall score (0-100 scale)
       analysis.overallScore = totalPossible > 0 
         ? Math.round((totalEarned / totalPossible) * 100) 
         : 0;
