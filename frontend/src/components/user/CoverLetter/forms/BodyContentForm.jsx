@@ -33,7 +33,7 @@ const BodyContentForm = ({ formData, onInputChange, onAIGenerate }) => {
 
       // const data = await response.json();
       console.log(response);
-      
+
       onInputChange(field, response.data.result);
       // if (data.success) {
       // } else {
@@ -93,7 +93,7 @@ const BodyContentForm = ({ formData, onInputChange, onAIGenerate }) => {
   );
 
   return (
-    <div className="form-section">
+    <div className="form-section p-4">
       <h3 className="form-section-title">Letter Content</h3>
       <p className="form-description">
         Write your cover letter content below or use AI to generate compelling

@@ -106,7 +106,7 @@ const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
 
     const onScroll = () => {
 
-      if (!containerRef?.current) {
+      if (!containerRef?.current || !panelRef?.current) {
 
         targetY.current = Math.max(0, window.scrollY - topOffset);
 
@@ -114,13 +114,15 @@ const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
 
       }
 
-      const containerTop =
-
-        containerRef.current.getBoundingClientRect().top + window.scrollY;
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const containerTop = containerRect.top + window.scrollY;
+      const containerHeight = containerRect.height;
+      const panelHeight = panelRef.current.offsetHeight;
 
       const desired = window.scrollY + topOffset - containerTop;
+      const maxDesired = Math.max(0, containerHeight - panelHeight);
 
-      targetY.current = Math.max(0, desired);
+      targetY.current = Math.max(0, Math.min(desired, maxDesired));
 
     };
 
@@ -1620,7 +1622,7 @@ ${formData.jobSummary || formData.jobDescription
 
             ref={leftColRef}
 
-            className="flex-shrink-0 hidden lg:block"
+            className="flex-shrink-0 hidden lg:block self-stretch"
 
             style={{ width: 520 }}
 
