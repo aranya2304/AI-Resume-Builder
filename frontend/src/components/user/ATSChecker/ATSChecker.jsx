@@ -1,4 +1,3 @@
-
 import "./ATSChecker.css";
 import ATSPdfPreview from "./ATSPdfPreview";
 import ATSDocPreview from "./ATSDocPreview";
@@ -682,44 +681,148 @@ const handleFileChange = async (e) => {
               </div>
             </div>
 
-       <div className="p-5 flex-1 flex flex-col">
-  {/* 🔄 LOADING - Shows for same duration as right panel */}
-  {isAnalyzing && uploadedFile ? (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', width: '100%' }}>
-      <div style={{ 
-        width: '50px', 
-        height: '50px', 
-        border: '4px solid #e2e8f0', 
-        borderTop: '4px solid #3b82f6', 
-        borderRadius: '50%', 
-        animation: 'spin 3.5s linear infinite'
-      }} />
-      <p style={{ color: '#475569', fontSize: '14px', fontWeight: '600', marginTop: '16px' }}>
-        Analyzing Resume...
-      </p>
-      <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '8px', animation: 'pulse 5.5s ease-in-out infinite' }}>
-        Checking keywords, formatting & ATS compatibility
-      </p>
-    </div>
-  ) : analysisResult ? (
-    /* ✅ Score Ring - Only show after analysis completes */
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.4 }} key={`score-${uploadedFile?.name}`}>
-      <ScoreRing score={analysisResult} animated={animatedScore} />
-    </motion.div>
-  ) : (
-    /* 📭 Empty State - Show when no file uploaded yet */
-    <div className="flex-1 flex items-center justify-center">
-      <div className="rounded-2xl border-2 border-dashed border-slate-100 p-8 text-center w-full">
-        <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
-          <Target size={28} className="text-slate-200" />
+      <div className="p-5 flex-1 flex flex-col relative">
+  {/* 📦 Content Container - Blurred when analyzing */}
+  <div className={`transition-all duration-300 ${isAnalyzing && uploadedFile ? 'blur-sm opacity-50 pointer-events-none' : ''}`}>
+    
+    {/* Score Ring */}
+    {analysisResult ? (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }} 
+        animate={{ opacity: 1, scale: 1 }} 
+        transition={{ duration: 1.4 }} 
+        key={`score-${uploadedFile?.name}`}
+      >
+        <ScoreRing score={analysisResult} animated={animatedScore} />
+      </motion.div>
+    ) : (
+      /* Empty State */
+      <div className="flex-1 flex items-center justify-center min-h-[300px]">
+        <div className="rounded-2xl border-2 border-dashed border-slate-100 p-8 text-center w-full">
+          <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
+            <Target size={28} className="text-slate-200" />
+          </div>
+          <p className="text-sm font-semibold text-slate-400 mb-1">No resume uploaded yet</p>
+          <p className="text-xs text-slate-300">Upload a resume on the right to see your ATS score here</p>
         </div>
-        <p className="text-sm font-semibold text-slate-400 mb-1">No resume uploaded yet</p>
-        <p className="text-xs text-slate-300">Upload a resume on the right to see your ATS score here</p>
       </div>
-    </div>
-  )}
+    )}
 
-  {/* CSS Animation Keyframes */}
+    {/* Section Scores */}
+    {analysisResult?.sectionScores?.length > 0 && (
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        transition={{ delay: 0.3 }} 
+        className="mt-5"
+      >
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Section Breakdown</p>
+        {analysisResult.sectionScores.map((s, i) => (
+          <SectionCard key={`${s.sectionName}-${i}-${uploadedFile?.name}`} section={s} />
+        ))}
+      </motion.div>
+    )}
+
+    {/* Error Tables */}
+    <AnimatePresence>
+      {spellingErrors.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+          <ErrorTable errors={spellingErrors} type="spell" onSelect={setActiveError} />
+        </motion.div>
+      )}
+      {pronounErrors.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+          <ErrorTable errors={pronounErrors} type="pronoun" onSelect={setActiveError} />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+
+  {/* 🌀 BLUR OVERLAY - Shows during analysis */}
+  <AnimatePresence>
+    {isAnalyzing && uploadedFile && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm z-10 rounded-xl"
+      >
+        {/* Animated Loader */}
+        <div className="relative">
+          {/* Outer ring */}
+          <motion.div
+            className="w-16 h-16 rounded-full border-4 border-slate-200"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            style={{ borderTopColor: '#3b82f6', borderRightColor: '#8b5cf6' }}
+          />
+          {/* Inner pulse */}
+          <motion.div
+            className="absolute inset-3 rounded-full bg-gradient-to-br from-blue-500 to-purple-500"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Sparkle icon */}
+          <Sparkles className="absolute inset-0 m-auto text-white" size={20} />
+        </div>
+
+        {/* Status Text */}
+        <div className="mt-6 text-center">
+          <motion.p 
+            className="text-base font-semibold text-slate-800"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            Analyzing Resume
+          </motion.p>
+          
+          {/* Animated dots */}
+          <div className="flex items-center justify-center gap-1 mt-1">
+            {[0, 1, 2].map((i) => (
+              <motion.span
+                key={i}
+                className="w-2 h-2 rounded-full bg-blue-500"
+                initial={{ opacity: 0.4, scale: 0.8 }}
+                animate={{ 
+                  opacity: [0.4, 1, 0.4],
+                  scale: [0.8, 1.2, 0.8]
+                }}
+                transition={{ 
+                  duration: 1.2, 
+                  repeat: Infinity, 
+                  delay: i * 0.2,
+                  ease: "easeInOut"
+                }}
+              />
+            ))}
+          </div>
+          
+          <motion.p 
+            className="text-xs text-slate-500 mt-3 max-w-[200px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            Checking keywords, formatting & ATS compatibility
+          </motion.p>
+        </div>
+
+        {/* Progress hint */}
+        <motion.div 
+          className="mt-4 flex items-center gap-2 text-xs text-slate-400"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Shield size={12} className="text-emerald-500" />
+          <span>AI-powered analysis in progress</span>
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+
+  {/* CSS for animations */}
   <style>{`
     @keyframes spin {
       0% { transform: rotate(0deg); }
@@ -730,30 +833,6 @@ const handleFileChange = async (e) => {
       50% { opacity: 1; }
     }
   `}</style>
-
-  {/* Section Scores - Only show after analysis completes */}
-  {!isAnalyzing && analysisResult?.sectionScores?.length > 0 && (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-5">
-      <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Section Breakdown</p>
-      {analysisResult.sectionScores.map((s, i) => (
-        <SectionCard key={`${s.sectionName}-${i}`} section={s} />
-      ))}
-    </motion.div>
-  )}
-
-  {/* Error Tables - Only show after analysis completes */}
-  <AnimatePresence>
-    {!isAnalyzing && spellingErrors.length > 0 && (
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-        <ErrorTable errors={spellingErrors} type="spell" onSelect={setActiveError} />
-      </motion.div>
-    )}
-    {!isAnalyzing && pronounErrors.length > 0 && (
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-        <ErrorTable errors={pronounErrors} type="pronoun" onSelect={setActiveError} />
-      </motion.div>
-    )}
-  </AnimatePresence>
 </div>
           </div>
         </div>
@@ -775,55 +854,37 @@ const handleFileChange = async (e) => {
             />
           </button>
 
-           <AnimatePresence initial={false}>
-    {(isMobilePreviewExpanded || !isMobile) && (
-      <motion.div
-        initial={isMobile ? { height: 0, opacity: 0 } : false}
-        animate={{ height: "auto", opacity: 1 }}
-        exit={{ height: 0, opacity: 0 }}
-        transition={{ duration: 2.3 }}
-        className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col"
-        style={{ minHeight: PANEL_HEIGHT }}
-      >
-        {/* Show UploadZone only if no file uploaded yet */}
-        {!uploadedFile ? (
-          <UploadZone onFileChange={handleFileChange} />
-        ) : isAnalyzing ? (
-          /* 🔄 Show loading animation during analysis */
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', width: '100%' }}>
-            <div style={{ 
-              width: '50px', 
-              height: '50px', 
-              border: '4px solid #e2e8f0', 
-              borderTop: '4px solid #3b82f6', 
-              borderRadius: '50%', 
-              animation: 'spin 3.5s linear infinite'
-            }} />
-            <p style={{ color: '#475569', fontSize: '14px', fontWeight: '600', marginTop: '16px' }}>
-              Analyzing Resume...
-            </p>
-            <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '8px', animation: 'pulse 5.5s ease-in-out infinite' }}>
-              Checking keywords, formatting & ATS compatibility
-            </p>
-          </div>
-        ) : previewUrl ? (
-          <div className="w-full flex-1" style={{ minHeight: PANEL_HEIGHT }}>
-            <ATSPdfPreview
-              pdfUrl={previewUrl}
-              onLoadSuccess={(pdf) => {
-                setNumPages(pdf.numPages);
-                setPdfInstance(pdf);
-              }}
-            />
-          </div>
-        ) : previewType === 'doc' && resumeText ? (
-          <div className="w-full flex-1" style={{ minHeight: PANEL_HEIGHT }}>
-            <ATSDocPreview text={resumeText} />
-          </div>
-        ) : null}
-      </motion.div>
-    )}
-  </AnimatePresence>
+          <AnimatePresence initial={false}>
+            {(isMobilePreviewExpanded || !isMobile) && (
+              <motion.div
+                initial={isMobile ? { height: 0, opacity: 0 } : false}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col"
+                style={{ minHeight: PANEL_HEIGHT }}
+              >
+               {previewUrl ? (
+  <div className="w-full flex-1" style={{ minHeight: PANEL_HEIGHT }}>
+    <ATSPdfPreview
+      pdfUrl={previewUrl}
+      onLoadSuccess={(pdf) => {
+        setNumPages(pdf.numPages);
+        setPdfInstance(pdf);
+      }}
+    />
+  </div>
+) : previewType === 'doc' && resumeText ? (
+  // Show DOC preview with extracted text
+  <div className="w-full flex-1" style={{ minHeight: PANEL_HEIGHT }}>
+    <ATSDocPreview text={resumeText} />
+  </div>
+) : (
+  <UploadZone onFileChange={handleFileChange} />
+)}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
