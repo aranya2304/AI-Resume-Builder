@@ -17,10 +17,10 @@ const RecipientInfoForm = ({ formData, onInputChange }) => {
 
   const handlePhoneChange = (e) => {
     const val = e.target.value;
-    const cleanVal = val.replace(/[^0-9+]/g, '');
+    const cleanVal = val.replace(/[^0-9+]/g, "");
     onInputChange("phone", cleanVal);
 
-    if (cleanVal && cleanVal.replace(/[^0-9]/g, '').length < 10) {
+    if (cleanVal && cleanVal.replace(/[^0-9]/g, "").length < 10) {
       setPhoneError(true);
     } else {
       setPhoneError(false);
@@ -28,7 +28,7 @@ const RecipientInfoForm = ({ formData, onInputChange }) => {
   };
 
   return (
-    <div className="form-section px-4">
+    <div className="form-section p-4">
       <h3 className="form-section-title">Your Information</h3>
       <div className="form-grid">
         <div className="form-group">
@@ -47,9 +47,13 @@ const RecipientInfoForm = ({ formData, onInputChange }) => {
             placeholder="john.doe@example.com"
             value={formData.email}
             onChange={handleEmailChange}
-            style={{ borderColor: emailError ? 'red' : '' }}
+            style={{ borderColor: emailError ? "red" : "" }}
           />
-          {emailError && <span style={{ color: 'red', fontSize: '12px' }}>Please enter a valid email</span>}
+          {emailError && (
+            <span style={{ color: "red", fontSize: "12px" }}>
+              Please enter a valid email
+            </span>
+          )}
         </div>
         <div className="form-group">
           <label>Phone</label>
@@ -59,9 +63,13 @@ const RecipientInfoForm = ({ formData, onInputChange }) => {
             value={formData.phone}
             maxLength={15}
             onChange={handlePhoneChange}
-            style={{ borderColor: phoneError ? 'red' : '' }}
+            style={{ borderColor: phoneError ? "red" : "" }}
           />
-          {phoneError && <span style={{ color: 'red', fontSize: '12px' }}>Please enter a valid phone number</span>}
+          {phoneError && (
+            <span style={{ color: "red", fontSize: "12px" }}>
+              Please enter a valid phone number
+            </span>
+          )}
         </div>
         <div className="form-group">
           <label>Address</label>

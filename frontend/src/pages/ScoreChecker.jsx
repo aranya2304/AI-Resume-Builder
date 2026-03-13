@@ -92,8 +92,7 @@ const staggerContainer = {
 
 const ScoreChecker = () => {
   const navigate = useNavigate();
-  const isLoggedIn =
-    typeof window !== "undefined" && !!localStorage.getItem("token");
+  const isLoggedIn = typeof window !== "undefined" && !!localStorage.getItem("token");
 
   const handleFeatureClick = (path) => {
     if (isLoggedIn) navigate(path);
@@ -109,11 +108,8 @@ const ScoreChecker = () => {
 
   const [openFaq, setOpenFaq] = useState(0);
 
-  const [heroRef, heroVisible] = useInView(0.2);
-  const [demoRef, demoVisible] = useInView(0.15);
   const [breakRef, breakVisible] = useInView(0.15);
   const [calcRef, calcVisible] = useInView(0.15);
-  const [whyRef, whyVisible] = useInView(0.15);
   const [faqRef, faqVisible] = useInView(0.15);
   const [ctaRef, ctaVisible] = useInView(0.2);
 
