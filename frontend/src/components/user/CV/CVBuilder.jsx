@@ -1028,13 +1028,13 @@ const [headerHeight, setHeaderHeight] = useState(64);
 
         {/* ════ BUILDER TAB ════ */}
         {activeTab === "builder" && (
-          <div className="flex gap-[10px] w-full mt-2 lg:mt-5 p-0 sm:p-2 lg:flex-row flex-col max-w-[1920px] mx-auto relative z-10">
+          <div className="flex gap-5 w-full mt-2 lg:mt-5 p-0 sm:p-2 lg:flex-row flex-col max-w-[1920px] mx-auto relative z-10">
             {/* ── LEFT: floating form panel (desktop) ── */}
             {!isPreviewMaximized && (
               <div
                 ref={leftColRef}
                 className="flex-shrink-0 hidden lg:block self-stretch"
-                style={{ width: 520 }}
+                style={{ width: 480 }}
               >
                 <FloatingFormPanel
                   topOffset={headerHeight}

@@ -26,6 +26,8 @@ import {
 
 import CoverLetterFormTabs from "./CoverLetterFormTabs";
 
+import SenderInfoForm from "./forms/SenderInfoForm";
+
 import RecipientInfoForm from "./forms/RecipientInfoForm";
 
 import JobDetailsForm from "./forms/JobDetailsForm";
@@ -170,6 +172,8 @@ const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
 
 const tabs = [
 
+  { id: "sender", label: "Personal", icon: User },
+
   { id: "recipient", label: "Recipient", icon: Building2 },
 
   { id: "job", label: "Job Details", icon: Briefcase },
@@ -242,7 +246,7 @@ const CoverLetterBuilder = () => {
 
   const [selectedTemplate, setSelectedTemplate] = useState("professional");
 
-  const [activeSection, setActiveSection] = useState("recipient");
+  const [activeSection, setActiveSection] = useState("sender");
 
   const [isExporting, setIsExporting] = useState(false);
 
@@ -1462,6 +1466,20 @@ ${formData.jobSummary || formData.jobDescription
 
     switch (activeSection) {
 
+      case "sender":
+
+        return (
+
+          <SenderInfoForm
+
+            formData={formData}
+
+            onInputChange={handleInputChange}
+
+          />
+
+        );
+
       case "recipient":
 
         return (
@@ -1614,7 +1632,7 @@ ${formData.jobSummary || formData.jobDescription
 
         {/* Main Layout – desktop floating form + preview (matches CV/Resume) */}
 
-        <div className="flex gap-[10px] w-full mt-2 lg:mt-5 p-0 sm:p-2 lg:flex-row flex-col max-w-[1920px] mx-auto relative z-10">
+        <div className="flex gap-5 w-full mt-2 lg:mt-5 p-0 sm:p-2 lg:flex-row flex-col max-w-[1920px] mx-auto relative z-10">
 
           {/* Desktop floating form panel */}
 
@@ -1624,7 +1642,7 @@ ${formData.jobSummary || formData.jobDescription
 
             className="flex-shrink-0 hidden lg:block self-stretch"
 
-            style={{ width: 520 }}
+            style={{ width: 480 }}
 
           >
 
