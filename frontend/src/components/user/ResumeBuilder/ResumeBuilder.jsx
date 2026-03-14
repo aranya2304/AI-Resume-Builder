@@ -179,6 +179,35 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
 
   /* ------------Input Validation ------------- */
   const [warning, setWarning] = useState(false);
+  const isSectionValid = () => {
+  switch (activeSection) {
+    case "personal":
+      return (
+        formData?.fullName?.trim() &&
+        formData?.email?.trim() &&
+        formData?.phone?.trim() &&
+        formData?.location?.trim()
+      );
+
+    case "work":
+      return formData?.experience && formData.experience.length > 0;
+
+    case "education":
+      return formData?.education && formData.education.length > 0;
+
+    case "skills":
+      return formData?.skills && formData.skills.length > 0;
+
+    case "projects":
+      return formData?.projects && formData.projects.length > 0;
+
+    case "certs":
+      return formData?.certifications && formData.certifications.length > 0;
+
+    default:
+      return true;
+  }
+};
   const isInputValid = (label) => {
     // For now, allow navigation to all sections regardless of completion status
     // Users can navigate freely and fill sections as needed
@@ -540,17 +569,14 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
                     </button>
                     <button
                       onClick={() => {
-                        if (isInputValid(tabs[currentIdx]?.label)) {
-                          setWarning(true);
-                          formContainerRef.current?.scrollTo({
-                            top: 0,
-                            behavior: "smooth",
-                          });
-                          return;
-                        }
-                        setWarning(false);
-                        goRight();
-                      }}
+  if (!isSectionValid()) {
+    setWarning(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  setWarning(false);
+  goRight();
+}}
                       disabled={currentIdx === tabs.length - 1}
                       className="flex gap-2 items-center text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
                     >
@@ -595,14 +621,17 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
                 </button>
                 <button
                   onClick={() => {
-                    if (isInputValid(tabs[currentIdx]?.label)) {
-                      setWarning(true);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                      return;
-                    }
-                    setWarning(false);
-                    goRight();
-                  }}
+  if (!isSectionValid()) {
+    setWarning(true);
+    formContainerRef.current?.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+    return;
+  }
+  setWarning(false);
+  goRight();
+}}
                   disabled={currentIdx === tabs.length - 1}
                   className="flex gap-2 items-center text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
                 >
