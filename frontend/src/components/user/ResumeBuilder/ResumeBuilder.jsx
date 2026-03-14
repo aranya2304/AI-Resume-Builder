@@ -63,14 +63,19 @@ const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
   // update target on scroll — anchor to container's top in the DOM
   useEffect(() => {
     const onScroll = () => {
-      if (!containerRef?.current) {
+      if (!containerRef?.current || !panelRef?.current) {
         targetY.current = Math.max(0, window.scrollY - topOffset);
         return;
       }
-      const containerTop =
-        containerRef.current.getBoundingClientRect().top + window.scrollY;
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const containerTop = containerRect.top + window.scrollY;
+      const containerHeight = containerRect.height;
+      const panelHeight = panelRef.current.offsetHeight;
+
       const desired = window.scrollY + topOffset - containerTop;
-      targetY.current = Math.max(0, desired);
+      const maxDesired = Math.max(0, containerHeight - panelHeight);
+
+      targetY.current = Math.max(0, Math.min(desired, maxDesired));
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
@@ -91,7 +96,7 @@ const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
   );
 };
 
-const ResumeBuilder = ({ setActivePage = () => {} }) => {
+const ResumeBuilder = ({ setActivePage = () => { } }) => {
   const headerRef = useRef(null);
   const leftColRef = useRef(null);
   const formContainerRef = useRef(null);
@@ -252,7 +257,7 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
     try {
       setExporting(true);
       await GenerateResumePDF(html);
-      
+
       // Save download record to database
       try {
         const nameToUse = documentTitle || formData.fullName || "Resume";
@@ -290,7 +295,7 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
     a.download = `${fileName}.doc`;
     a.click();
     URL.revokeObjectURL(url);
-    
+
     // Save download record to database
     try {
       const nameToUse = documentTitle || formData.fullName || "Resume";
@@ -307,74 +312,74 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
     }
   };
 
-   
   // ===============================
-// RESUME UPLOAD HANDLER
-// ===============================
-const handleResumeUpload = async (file) => {
-  try {
-    if (!file) return;
+  // RESUME UPLOAD HANDLER
+  // ===============================
+  const handleResumeUpload = async (file) => {
+    try {
+      if (!file) return;
 
-    const formDataUpload = new FormData();
-    formDataUpload.append("resume", file);
+      const formDataUpload = new FormData();
+      formDataUpload.append("resume", file);
 
-    // required backend fields
-    formDataUpload.append("jobTitle", "Resume Builder Upload");
-    formDataUpload.append("templateId", selectedTemplate);
-    formDataUpload.append("resumeprofileId", "000000000000000000000000");
+      // required backend fields
+      formDataUpload.append("jobTitle", "Resume Builder Upload");
+      formDataUpload.append("templateId", selectedTemplate);
+      formDataUpload.append("resumeprofileId", "000000000000000000000000");
 
-    const res = await axiosInstance.post(
-      "/api/resume/upload",
-      formDataUpload,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const res = await axiosInstance.post(
+        "/api/resume/upload",
+        formDataUpload,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
+      );
+
+      const parsed = res.data?.data?.extractedData;
+      console.log("🔍 Parsed resume data:", parsed);
+
+      if (!parsed) {
+        alert("Failed to parse resume.");
+        return;
       }
-    );
 
-    const parsed = res.data?.data?.extractedData;
-    console.log("🔍 Parsed resume data:", parsed);
+      // Auto-fill builder form - use correct field names from backend
+      setFormData((prev) => ({
+        ...prev,
+        fullName: parsed.fullName || parsed.name || prev.fullName,
+        email: parsed.email || prev.email,
+        phone: parsed.phone || prev.phone,
+        location: parsed.location || prev.location,
+        summary: parsed.summary || prev.summary, // This should now work
+        linkedin: parsed.linkedin || prev.linkedin,
+        website: parsed.website || prev.website,
+        education: parsed.education || prev.education,
+        experience: parsed.experience || prev.experience,
+        projects: parsed.projects || prev.projects,
+        skills: parsed.skills || prev.skills,
+        certifications: parsed.certifications || prev.certifications,
+      }));
 
-    if (!parsed) {
-      alert("Failed to parse resume.");
-      return;
+      console.log("📝 Summary extracted:", parsed.summary);
+      alert("Resume uploaded and imported successfully!");
+    } catch (error) {
+      console.error("Upload failed:", error);
+
+      // Better error handling for authentication issues
+      if (error.response?.status === 401) {
+        alert("Authentication required. Please log in again to upload resume.");
+        // Optionally redirect to login page
+        // window.location.href = "/login";
+      } else {
+        alert(
+          `Resume upload failed: ${error.response?.data?.message || error.message}`,
+        );
+      }
     }
+  };
 
-    // Auto-fill builder form - use correct field names from backend
-    setFormData((prev) => ({
-      ...prev,
-      fullName: parsed.fullName || parsed.name || prev.fullName,
-      email: parsed.email || prev.email,
-      phone: parsed.phone || prev.phone,
-      location: parsed.location || prev.location,
-      summary: parsed.summary || prev.summary, // This should now work
-      linkedin: parsed.linkedin || prev.linkedin,
-      website: parsed.website || prev.website,
-      education: parsed.education || prev.education,
-      experience: parsed.experience || prev.experience,
-      projects: parsed.projects || prev.projects,
-      skills: parsed.skills || prev.skills,
-      certifications: parsed.certifications || prev.certifications,
-    }));
-
-    console.log("📝 Summary extracted:", parsed.summary);
-    alert("Resume uploaded and imported successfully!");
-  } catch (error) {
-    console.error("Upload failed:", error);
-    
-    // Better error handling for authentication issues
-    if (error.response?.status === 401) {
-      alert("Authentication required. Please log in again to upload resume.");
-      // Optionally redirect to login page
-      // window.location.href = "/login";
-    } else {
-      alert(`Resume upload failed: ${error.response?.data?.message || error.message}`);
-    }
-  }
-};
-
-  
   /*------------------- PREVIOUS & NEXT BUTTON ------------*/
   const tabs = [
     { id: "personal", label: "Personal", icon: User },
@@ -447,12 +452,39 @@ const handleResumeUpload = async (file) => {
     // BUILDER TAB – mirror CV layout with floating form + desktop preview
     return (
       <>
+        {completion?.isComplete ? (
+          <div className="px-4 mt-2">
+            <div className="flex gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm px-2">
+              <CheckCircle
+                className="text-emerald-500 flex-shrink-0 mt-0.5"
+                size={18}
+              />
+              <span className="text-sm font-medium text-emerald-800">
+                Resume Ready: All necessary information has been added. You can
+                now export your resume.
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="px-4 mt-2">
+            <div className="flex gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl shadow-sm px-2">
+              <AlertTriangle
+                className="text-amber-500 flex-shrink-0 mt-0.5"
+                size={18}
+              />
+              <span className="text-sm font-medium text-amber-800">
+                Complete Your Resume: Add the missing information to enable
+                export functionality.
+              </span>
+            </div>
+          </div>
+        )}
         <div className="flex gap-5 px-4 pb-20 pt-4 items-start">
           {/* Desktop floating form panel */}
           {!isPreviewExpanded && (
             <div
               ref={leftColRef}
-              className="flex-shrink-0 hidden lg:block"
+              className="flex-shrink-0 hidden lg:block self-stretch"
               style={{ width: 480 }}
             >
               <FloatingFormPanel
@@ -480,69 +512,12 @@ const handleResumeUpload = async (file) => {
                   {/* Scrollable form content */}
                   <div
                     ref={formContainerRef}
-                    className="flex-1 overflow-y-auto p-4"
+                    className="flex-1 overflow-y-auto p-4 pb-0"
                     style={{
                       scrollbarWidth: "thin",
                       scrollbarColor: "#e2e8f0 transparent",
                     }}
                   >
-                    {/* Alert Banner */}
-                    <div
-                      className={`flex items-center w-full gap-3 p-4 border rounded-lg mb-4 ${completion?.isComplete ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"} md:text-base text-sm md:flex-row flex-col select-none`}
-                    >
-                      {!completion.isComplete && (
-                        <>
-                          <AlertTriangle
-                            className="text-amber-800 md:block hidden"
-                            size={30}
-                          />
-                          <div className="flex flex-col md:w-auto w-full">
-                            <div className="block font-medium text-amber-800 mb-0.5 md:text-sm text-xs">
-                              Complete Your Resume
-                            </div>
-                            <p className="text-yellow-700 m-0 md:text-md text-xs">
-                              Add the following information to enable export
-                              functionality:
-                            </p>
-                          </div>
-                          <div className="w-full flex flex-wrap gap-2 justify-start md:justify-end">
-                            {!completion?.isComplete &&
-                              completion?.missingSections?.map(
-                                (missing, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="px-2.5 py-1 rounded-md font-medium bg-amber-100 text-amber-800 text-xs"
-                                  >
-                                    {missing}
-                                  </span>
-                                ),
-                              )}
-                          </div>
-                        </>
-                      )}
-                      {completion.isComplete && (
-                        <>
-                          <CheckCircle
-                            className="text-emerald-500 md:block hidden"
-                            size={20}
-                          />
-                          <div className="flex flex-col md:w-auto w-full">
-                            <strong className="block text-left mb-0.5 text-emerald-500 md:text-xs text-sm">
-                              Resume Ready
-                            </strong>
-                            <p className="text-emerald-500 m-0 md:text-md text-xs">
-                              Your resume is ready to export.
-                            </p>
-                          </div>
-                          <div className="flex gap-2 ml-auto flex-wrap">
-                            <span className="px-2.5 py-1 rounded-md font-medium bg-emerald-100 text-emerald-800 md:text-md text-xs">
-                              Resume is Ready
-                            </span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
                     {/* Validation warning */}
                     {warning && (
                       <div className="text-sm text-red-700 bg-yellow-100 border border-yellow-300 px-4 py-2 mb-3 rounded-lg">
@@ -551,54 +526,37 @@ const handleResumeUpload = async (file) => {
                     )}
 
                     {renderFormContent()}
+                  </div>
 
-                    {/* Previous & Next */}
-                    <div className="w-full flex items-center justify-between mt-8">
-                      {/* Step Indicators */}
-                      <div className="flex items-center gap-2">
-                        {tabs.map((tab, index) => (
-                          <div
-                            key={tab.id}
-                            className={`w-8 h-2 rounded-full transition-colors ${
-                              index < currentIdx
-                                ? "bg-blue-600"
-                                : index === currentIdx
-                                ? "bg-blue-600"
-                                : "bg-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      
-                      <button
-                        onClick={goLeft}
-                        disabled={currentIdx === 0}
-                        className="flex gap-1 items-center text-sm bg-slate-100 px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
-                      >
-                        <ArrowLeft size={18} />
-                        <span>Previous</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (isInputValid(tabs[currentIdx]?.label)) {
-                            setWarning(true);
-                            formContainerRef.current?.scrollTo({
-                              top: 0,
-                              behavior: "smooth",
-                            });
-                            return;
-                          }
-                          setWarning(false);
-                          goRight();
-                        }}
-                        disabled={currentIdx === tabs.length - 1}
-                        className="flex gap-1 items-center text-sm bg-black text-white px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
-                      >
-                        <span>Next</span>
-                        <ArrowRight size={18} />
-                      </button>
-                    </div>
-                    <div style={{ height: 48 }} />
+                  {/* Previous & Next Desktop */}
+                  <div className="flex-shrink-0 flex items-center justify-between p-4 border-t border-slate-100 bg-white rounded-b-2xl">
+                    <button
+                      onClick={goLeft}
+                      disabled={currentIdx === 0}
+                      className="flex gap-2 items-center text-sm font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 px-5 py-2.5 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                    >
+                      <ArrowLeft size={16} />
+                      <span className="hidden sm:inline">Previous</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (isInputValid(tabs[currentIdx]?.label)) {
+                          setWarning(true);
+                          formContainerRef.current?.scrollTo({
+                            top: 0,
+                            behavior: "smooth",
+                          });
+                          return;
+                        }
+                        setWarning(false);
+                        goRight();
+                      }}
+                      disabled={currentIdx === tabs.length - 1}
+                      className="flex gap-2 items-center text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                    >
+                      <span className="hidden sm:inline">Next Step</span>
+                      <ArrowRight size={16} />
+                    </button>
                   </div>
                 </div>
               </FloatingFormPanel>
@@ -608,7 +566,7 @@ const handleResumeUpload = async (file) => {
           {/* Mobile form card (no desktop preview here) */}
           <div className="w-full lg:hidden flex flex-col">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden mb-4">
-              <div className="flex-shrink-0 border-b border-slate-100 px-4 py-3">
+              <div className="flex-shrink-0">
                 <FormTabs
                   activeSection={activeSection}
                   setActiveSection={setActiveSection}
@@ -616,48 +574,7 @@ const handleResumeUpload = async (file) => {
                   onTogglePreview={() => setShowMobilePreview((v) => !v)}
                 />
               </div>
-              <div className="p-4">
-                <div
-                  className={`flex items-center w-full gap-3 p-3 border rounded-lg mb-4 ${completion?.isComplete ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"} text-sm flex-col select-none`}
-                >
-                  {!completion.isComplete && (
-                    <>
-                      <div className="flex flex-col w-full">
-                        <div className="block font-medium text-amber-800 mb-0.5 text-xs">
-                          Complete Your Resume
-                        </div>
-                        <p className="text-yellow-700 m-0 text-xs">
-                          Add the following information to enable export
-                          functionality:
-                        </p>
-                      </div>
-                      <div className="w-full flex flex-wrap gap-2 justify-start">
-                        {!completion?.isComplete &&
-                          completion?.missingSections?.map((missing, idx) => (
-                            <span
-                              key={idx}
-                              className="px-2.5 py-1 rounded-md font-medium bg-amber-100 text-amber-800 text-xs"
-                            >
-                              {missing}
-                            </span>
-                          ))}
-                      </div>
-                    </>
-                  )}
-                  {completion.isComplete && (
-                    <>
-                      <div className="flex flex-col w-full">
-                        <strong className="block text-left mb-0.5 text-emerald-500 text-xs">
-                          Resume Ready
-                        </strong>
-                        <p className="text-emerald-500 m-0 text-xs">
-                          Your resume is ready to export.
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-
+              <div className="flex-1 min-h-[400px] overflow-y-auto p-4 pb-0">
                 {warning && (
                   <div className="text-sm text-red-700 bg-yellow-100 border border-yellow-300 px-4 py-2 mb-3 rounded-lg">
                     Please fill in all required fields to continue.
@@ -665,33 +582,33 @@ const handleResumeUpload = async (file) => {
                 )}
 
                 {renderFormContent()}
+              </div>
 
-                <div className="w-full flex items-center justify-between mt-6">
-                  <button
-                    onClick={goLeft}
-                    disabled={currentIdx === 0}
-                    className="flex gap-1 items-center text-sm bg-slate-100 px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
-                  >
-                    <ArrowLeft size={18} />
-                    <span>Previous</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (isInputValid(tabs[currentIdx]?.label)) {
-                        setWarning(true);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                        return;
-                      }
-                      setWarning(false);
-                      goRight();
-                    }}
-                    disabled={currentIdx === tabs.length - 1}
-                    className="flex gap-1 items-center text-sm bg-black text-white px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
-                  >
-                    <span>Next</span>
-                    <ArrowRight size={18} />
-                  </button>
-                </div>
+              <div className="flex-shrink-0 flex items-center justify-between p-4 border-t border-slate-100 bg-white">
+                <button
+                  onClick={goLeft}
+                  disabled={currentIdx === 0}
+                  className="flex gap-2 items-center text-sm font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                >
+                  <ArrowLeft size={16} />
+                  <span>Previous</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (isInputValid(tabs[currentIdx]?.label)) {
+                      setWarning(true);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      return;
+                    }
+                    setWarning(false);
+                    goRight();
+                  }}
+                  disabled={currentIdx === tabs.length - 1}
+                  className="flex gap-2 items-center text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                >
+                  <span>Next Step</span>
+                  <ArrowRight size={16} />
+                </button>
               </div>
             </div>
           </div>
@@ -742,7 +659,7 @@ const handleResumeUpload = async (file) => {
             formData={formData}
             currentTemplate={currentTemplate}
             isExpanded={true}
-            onExpand={() => {}}
+            onExpand={() => { }}
             onCollapse={() => setIsPreviewExpanded(false)}
             onMinimize={() => setIsPreviewHidden(true)}
           />
@@ -755,7 +672,7 @@ const handleResumeUpload = async (file) => {
         setActiveTab={setActiveTab}
         onDownload={handleDownload}
         onDownloadWord={handleDownloadWord}
-       onUpload={handleResumeUpload}
+        onUpload={handleResumeUpload}
         isDownloading={loading}
         downloadDisabled={false} // Allow downloads regardless of completion status
         title={documentTitle}
@@ -831,8 +748,8 @@ const handleResumeUpload = async (file) => {
                   formData={formData}
                   currentTemplate={currentTemplate}
                   isExpanded={false}
-                  onExpand={() => {}}
-                  onCollapse={() => {}}
+                  onExpand={() => { }}
+                  onCollapse={() => { }}
                   onMinimize={() => setShowMobilePreview(false)}
                 />
               </div>

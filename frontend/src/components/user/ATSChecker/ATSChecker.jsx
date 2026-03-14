@@ -49,7 +49,7 @@ function UploadZone({ onFileChange }) {
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 10.5, ease: "easeOut" }}
         className="w-full max-w-lg"
       >
         {/* Header text */}
@@ -320,6 +320,38 @@ function ErrorTable({ errors, type, onSelect }) {
       </div>
     </div>
   );
+}function CircularLoader() {
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <div className="relative w-16 h-16">
+        <motion.div
+          className="absolute inset-0 rounded-full border-4 border-transparent"
+          style={{
+            borderTopColor: "#3b82f6",
+            borderRightColor: "#8b5cf6",
+            borderBottomColor: "#a78bfa",
+          }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 125.2, repeat: Infinity, ease: "linear" }}
+        />
+      </div>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="mt-4 text-sm font-semibold text-slate-700"
+      >
+        Analyzing Resume
+      </motion.p>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 720.2 }}
+        className="text-xs text-slate-400 mt-1"
+      >
+        Checking ATS compatibility...
+      </motion.p>
+    </div>
+  );
 }
 
 /* ═══════════════════ MAIN COMPONENT ═══════════════════ */
@@ -342,6 +374,7 @@ const ATSChecker = ({ onSidebarToggle }) => {
   const [animatedScore, setAnimatedScore] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [previewType, setPreviewType] = useState('pdf');
+  const analysisStartTimeRef = useRef(null);
 
   /* ── Score animation ── */
   useEffect(() => {
@@ -444,8 +477,16 @@ const handleFileChange = async (e) => {
                         file.type === "application/msword" || 
                         file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   
+   setAnalysisResult(null);
+  setAnimatedScore(0);
+  setSpellingErrors([]);
+  setPronounErrors([]);
+  setActiveError(null);
+  setResumeText("");
+  
   setUploadedFile(file);
   setIsAnalyzing(true);
+  analysisStartTimeRef.current = Date.now();
 
   // Support PDF, DOC, and DOCX
   if (file.type === "application/pdf" || fileExtension === 'pdf') {
@@ -527,10 +568,22 @@ const handleFileChange = async (e) => {
       console.error("API returned success: false →", data?.message || data);
     }
   } catch (err) {
-    console.error("ATS fetch failed — is the backend running on port 5000?", err);
-  } finally {
+  console.error("ATS fetch failed — is the backend running on port 5000?", err);
+} finally {
+  // Enforce minimum 5.5 second loading animation
+  const elapsed = Date.now() - analysisStartTimeRef.current;
+  const minDuration = 5500; // 5.5 seconds
+  
+  if (elapsed < minDuration) {
+    setTimeout(() => {
+      setIsAnalyzing(false);
+      analysisStartTimeRef.current = null;
+    }, minDuration - elapsed);
+  } else {
     setIsAnalyzing(false);
+    analysisStartTimeRef.current = null;
   }
+}
 };
   const buildErrorLocationsFromPdf = async (pdf, wrongWords) => {
     if (!pdf || !wrongWords?.length) return [];
@@ -628,79 +681,159 @@ const handleFileChange = async (e) => {
               </div>
             </div>
 
-            <div className="p-5 flex-1 flex flex-col">
-              {/* Score Ring */}
-              {analysisResult ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <ScoreRing score={analysisResult} animated={animatedScore} />
-                </motion.div>
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="rounded-2xl border-2 border-dashed border-slate-100 p-8 text-center w-full">
-                    <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
-                      <Target size={28} className="text-slate-200" />
-                    </div>
-                    <p className="text-sm font-semibold text-slate-400 mb-1">
-                      No resume uploaded yet
-                    </p>
-                    <p className="text-xs text-slate-300">
-                      Upload a resume on the right to see your ATS score here
-                    </p>
-                  </div>
-                </div>
-              )}
+      <div className="p-5 flex-1 flex flex-col relative">
+  {/* 📦 Content Container - Blurred when analyzing */}
+  <div className={`transition-all duration-300 ${isAnalyzing && uploadedFile ? 'blur-sm opacity-50 pointer-events-none' : ''}`}>
+    
+    {/* Score Ring */}
+    {analysisResult ? (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }} 
+        animate={{ opacity: 1, scale: 1 }} 
+        transition={{ duration: 1.4 }} 
+        key={`score-${uploadedFile?.name}`}
+      >
+        <ScoreRing score={analysisResult} animated={animatedScore} />
+      </motion.div>
+    ) : (
+      /* Empty State */
+      <div className="flex-1 flex items-center justify-center min-h-[300px]">
+        <div className="rounded-2xl border-2 border-dashed border-slate-100 p-8 text-center w-full">
+          <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
+            <Target size={28} className="text-slate-200" />
+          </div>
+          <p className="text-sm font-semibold text-slate-400 mb-1">No resume uploaded yet</p>
+          <p className="text-xs text-slate-300">Upload a resume on the right to see your ATS score here</p>
+        </div>
+      </div>
+    )}
 
-              {/* Section Scores */}
-              {analysisResult?.sectionScores?.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-5"
-                >
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
-                    Section Breakdown
-                  </p>
-                  {analysisResult.sectionScores.map((s, i) => (
-                    <SectionCard key={i} section={s} />
-                  ))}
-                </motion.div>
-              )}
+    {/* Section Scores */}
+    {analysisResult?.sectionScores?.length > 0 && (
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        transition={{ delay: 0.3 }} 
+        className="mt-5"
+      >
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Section Breakdown</p>
+        {analysisResult.sectionScores.map((s, i) => (
+          <SectionCard key={`${s.sectionName}-${i}-${uploadedFile?.name}`} section={s} />
+        ))}
+      </motion.div>
+    )}
 
-              {/* Error Tables */}
-              <AnimatePresence>
-                {spellingErrors.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <ErrorTable
-                      errors={spellingErrors}
-                      type="spell"
-                      onSelect={setActiveError}
-                    />
-                  </motion.div>
-                )}
-                {pronounErrors.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <ErrorTable
-                      errors={pronounErrors}
-                      type="pronoun"
-                      onSelect={setActiveError}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+    {/* Error Tables */}
+    <AnimatePresence>
+      {spellingErrors.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+          <ErrorTable errors={spellingErrors} type="spell" onSelect={setActiveError} />
+        </motion.div>
+      )}
+      {pronounErrors.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+          <ErrorTable errors={pronounErrors} type="pronoun" onSelect={setActiveError} />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+
+  {/* 🌀 BLUR OVERLAY - Shows during analysis */}
+  <AnimatePresence>
+    {isAnalyzing && uploadedFile && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm z-10 rounded-xl"
+      >
+        {/* Animated Loader */}
+        <div className="relative">
+          {/* Outer ring */}
+          <motion.div
+            className="w-16 h-16 rounded-full border-4 border-slate-200"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            style={{ borderTopColor: '#3b82f6', borderRightColor: '#8b5cf6' }}
+          />
+          {/* Inner pulse */}
+          <motion.div
+            className="absolute inset-3 rounded-full bg-gradient-to-br from-blue-500 to-purple-500"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Sparkle icon */}
+          <Sparkles className="absolute inset-0 m-auto text-white" size={20} />
+        </div>
+
+        {/* Status Text */}
+        <div className="mt-6 text-center">
+          <motion.p 
+            className="text-base font-semibold text-slate-800"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            Analyzing Resume
+          </motion.p>
+          
+          {/* Animated dots */}
+          <div className="flex items-center justify-center gap-1 mt-1">
+            {[0, 1, 2].map((i) => (
+              <motion.span
+                key={i}
+                className="w-2 h-2 rounded-full bg-blue-500"
+                initial={{ opacity: 0.4, scale: 0.8 }}
+                animate={{ 
+                  opacity: [0.4, 1, 0.4],
+                  scale: [0.8, 1.2, 0.8]
+                }}
+                transition={{ 
+                  duration: 1.2, 
+                  repeat: Infinity, 
+                  delay: i * 0.2,
+                  ease: "easeInOut"
+                }}
+              />
+            ))}
+          </div>
+          
+          <motion.p 
+            className="text-xs text-slate-500 mt-3 max-w-[200px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            Checking keywords, formatting & ATS compatibility
+          </motion.p>
+        </div>
+
+        {/* Progress hint */}
+        <motion.div 
+          className="mt-4 flex items-center gap-2 text-xs text-slate-400"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Shield size={12} className="text-emerald-500" />
+          <span>AI-powered analysis in progress</span>
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+
+  {/* CSS for animations */}
+  <style>{`
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+  `}</style>
+</div>
           </div>
         </div>
 
