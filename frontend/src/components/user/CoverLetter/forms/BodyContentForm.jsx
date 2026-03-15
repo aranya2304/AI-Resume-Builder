@@ -52,7 +52,7 @@ const BodyContentForm = ({ formData, onInputChange, onAIGenerate }) => {
         <label className="text-sm font-semibold text-slate-700">{label}</label>
         <div className="flex gap-2">
           <button
-            className="flex gap-1.5 items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50"
+            className="flex gap-1.5 items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
             onClick={() => handleGenerate(field)}
             disabled={generating[field]}
           >
@@ -62,7 +62,7 @@ const BodyContentForm = ({ formData, onInputChange, onAIGenerate }) => {
               </>
             ) : (
               <>
-                <Sparkles size={14} /> AI Generate
+                <Sparkles size={14} /> Enhance with AI
               </>
             )}
           </button>

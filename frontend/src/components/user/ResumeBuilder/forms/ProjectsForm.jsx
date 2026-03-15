@@ -18,9 +18,9 @@ const ProjectsForm = ({ formData, setFormData }) => {
     if (sectionValidationStatus.hasValidProject) {
       setEditingId(null);
     } else {
-      setEditingId(formData?.projects?.[0]?.id);
+      setEditingId((formData?.projects?.[0]?.id) ?? null);
     }
-  }, []);
+  }, [formData]);
 
   const addProject = () => {
     const id = crypto.randomUUID();
@@ -48,7 +48,7 @@ const ProjectsForm = ({ formData, setFormData }) => {
   };
 
   const updateProject = (id, field, value) => {
-    const updated = formData.projects.map((item) =>
+    const updated = (formData?.projects ?? []).map((item) =>
       item.id === id ? { ...item, [field]: value } : item,
     );
     setFormData((prev) => ({
@@ -234,15 +234,15 @@ const ProjectsForm = ({ formData, setFormData }) => {
                       value={project?.link?.github || ""}
                       placeholder="https://github.com/yourusername/project"
                       onChange={(e) => {
-                        const updated = formData.projects.map((item) =>
+                        const updated = (formData?.projects ?? []).map((item) =>
                           item.id === project.id
                             ? {
-                              ...item,
-                              link: {
-                                ...item.link,
-                                github: e.target.value,
-                              },
-                            }
+                                ...item,
+                                link: {
+                                  ...item.link,
+                                  github: e.target.value,
+                                },
+                              }
                             : item,
                         );
                         setFormData((prev) => ({
