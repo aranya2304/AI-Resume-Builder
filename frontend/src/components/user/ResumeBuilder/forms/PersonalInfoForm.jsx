@@ -1,50 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { RefreshCw, Sparkles, User } from "lucide-react";
-import { getCompletionStatus } from "./../completion";
 import axiosInstance from "../../../../api/axios";
 
 const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
-  const isInitialRender = useRef(true);
-  const debounceTimer = useRef(null);
 
-  // Auto-generate summary when skills, experience, or projects change
-  useEffect(() => {
-    // Skip initial render
-    if (isInitialRender.current) {
-      isInitialRender.current = false;
-      return;
-    }
-    // Clear previous timer
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-    // Only generate if we have some content
-    const hasContent = getCompletionStatus(formData);
-    const hasContentValue = Object.values(
-      hasContent.sectionValidationStatus,
-    ).some((status) => status === true);
-
-    if (hasContentValue) {
-      // Debounce: wait 2 seconds after user stops typing
-      debounceTimer.current = setTimeout(() => {
-        autoGenerateSummary();
-      }, 2000);
-    }
-
-    return () => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-    };
-  }, [
-    formData.experience,
-    formData.projects,
-    formData.skills.technical,
-    formData.skills.soft,
-  ]);
 
   const autoGenerateSummary = async () => {
     try {
@@ -196,13 +158,22 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
         </div>
       </div>
       <div className="flex flex-col gap-1.5 mt-6 mb-4">
-        <label className="flex gap-2 text-sm font-semibold text-slate-700 mb-1">
-          Professional Summary <span className="text-slate-400 font-normal">(Optional)</span>
-          <RefreshCw
-            size={16}
-            className={`ml-1 text-slate-400 ${isGenerating ? "animate-spin text-blue-500" : "hidden"}`}
-          />
-        </label>
+        <div className="w-full flex items-center justify-between mb-1">
+          <label className="text-sm font-semibold text-slate-700">
+            Professional Summary <span className="text-slate-400 font-normal">(Optional)</span>
+          </label>
+          <button
+            className="flex gap-2 ml-2 p-2 rounded-lg text-xs bg-blue-100 text-blue-600 hover:bg-blue-200 hover:text-blue-800"
+            onClick={autoGenerateSummary}
+          >
+            {isGenerating ? (
+              <RefreshCw size={15} className="ml-1 animate-spin" />
+            ) : (
+              <Sparkles size={14} />
+            )}
+            Enhance with AI
+          </button>
+        </div>
         <textarea
           className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white resize-y min-h-[140px] leading-relaxed"
           value={formData?.summary || ""}
@@ -210,11 +181,7 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
           placeholder="Write a brief professional summary highlighting your key skills and experience..."
           onChange={(e) => onInputChange("summary", e.target.value)}
         />
-        <div className="flex justify-between items-start mt-1">
-          <span className="flex gap-1.5 items-center text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-md">
-            <Sparkles size={14} />
-            AI suggestions enabled
-          </span>
+        <div className="flex justify-end items-start mt-1">
           <span className="text-xs text-slate-400 font-medium">
             {formData?.summary?.length || 0} / 500
           </span>
