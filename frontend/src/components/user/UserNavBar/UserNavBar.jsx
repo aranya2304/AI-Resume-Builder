@@ -150,6 +150,8 @@ export default function UserNavbar() {
     // Clear local storage tokens
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("resumeFormData");
+    localStorage.removeItem("currentTemplate");
     sessionStorage.clear();
     
     // Clear any axios default auth headers

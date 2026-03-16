@@ -30,7 +30,7 @@ import TemplatesPage from "../Templates/TemplatesDashboardPage";
 import { TEMPLATES } from "../Templates/TemplateRegistry";
 
 import { getCompletionStatus } from "./completion";
-import { dummyData } from "./dummyData";
+import { dummyData, emptyData } from "./dummyData";
 
 import UserNavbar from "../UserNavBar/UserNavBar";
 import CVBuilderTopBar from "../CV/Cvbuildernavbar";
@@ -106,9 +106,9 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
   const [formData, setFormData] = useState(() => {
     try {
       const data = localStorage.getItem("resumeFormData");
-      return data ? JSON.parse(data) : dummyData;
+      return data ? JSON.parse(data) : emptyData;
     } catch {
-      return dummyData;
+      return emptyData;
     }
   });
 
@@ -803,6 +803,7 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
         setActiveTab={setActiveTab}
         onDownload={handleDownload}
         onDownloadWord={handleDownloadWord}
+        showDownloadWord={false} // Only hide Word download on Resume page
         onUpload={handleResumeUpload}
         isDownloading={loading}
         downloadDisabled={false} // Allow downloads regardless of completion status

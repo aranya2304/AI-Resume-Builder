@@ -22,6 +22,7 @@ const CVBuilderTopBar = ({
   showUpload = true,
   showDesigner = true,
   downloadDisabled = false,
+  showDownloadWord = true,
   extraButtons = null,
 }) => {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
@@ -175,10 +176,15 @@ const CVBuilderTopBar = ({
           </button>
         )}
 
-        {/* Download dropdown */}
         <div className="relative" ref={downloadDropdownDesktopRef}>
           <button
-            onClick={() => setShowDownloadMenu((v) => !v)}
+            onClick={() => {
+              if (showDownloadWord) {
+                setShowDownloadMenu((v) => !v);
+              } else {
+                onDownload?.();
+              }
+            }}
             disabled={isDownloading || downloadDisabled}
             className="flex items-center gap-2 text-white bg-indigo-600 rounded-lg text-sm transition-all duration-200 hover:bg-indigo-700 py-2 px-3 sm:px-5 disabled:bg-indigo-400 disabled:cursor-not-allowed whitespace-nowrap"
           >
@@ -190,13 +196,15 @@ const CVBuilderTopBar = ({
             <span className="hidden sm:inline">
               {isDownloading ? "Downloading…" : "Download"}
             </span>
-            <ChevronDown
-              size={14}
-              className={`transition-transform duration-200 ${showDownloadMenu ? "rotate-180" : ""}`}
-            />
+            {showDownloadWord && (
+              <ChevronDown
+                size={14}
+                className={`transition-transform duration-200 ${showDownloadMenu ? "rotate-180" : ""}`}
+              />
+            )}
           </button>
 
-          {showDownloadMenu && (
+          {showDownloadMenu && showDownloadWord && (
             <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
               <button
                 onClick={() => {
