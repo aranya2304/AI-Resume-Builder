@@ -1233,7 +1233,7 @@ const goRight = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0 md:pt-0 pt-20">
       {/* Sticky navbar, same behavior as CV/Resume */}
 
       <div
@@ -1261,7 +1261,7 @@ const goRight = () => {
         showDesigner={false}
       />
 
-      <div className="px-2 py-4 sm:px-4 lg:px-4 w-screen max-w-full mx-0">
+      <div className="px-2 pt-4 pb-9 sm:px-4 lg:px-4 w-screen max-w-full mx-0">
         {/* Warning Banner */}
 
         <div className="flex gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl mb-4 shadow-sm px-2">

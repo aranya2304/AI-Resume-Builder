@@ -61,10 +61,10 @@ const PersonalInfoForm = ({ formData, onInputChange }) => {
       onInputChange("summary", response.data.aiResume);
     } catch (error) {
       console.error("Failed to generate summary:", error);
-      alert(
-        `Failed to generate summary: ${error.response?.data?.error || error.message
-        }`,
-      );
+      // alert(
+      //   `Failed to generate summary: ${error.response?.data?.error || error.message
+      //   }`,
+      // );
     } finally {
       setIsGenerating(false);
     }

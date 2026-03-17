@@ -1042,7 +1042,7 @@ const CVBuilder = () => {
 
   /* ================= RENDER ================= */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0 flex flex-col md:pt-0 pt-20">
       {/* ── Sticky: navbar only ── */}
       <div
         ref={headerRef}
@@ -1067,7 +1067,7 @@ const CVBuilder = () => {
         onToggleAiMode={() => setIsAiMode((v) => !v)}
       />
 
-      <div className="px-2 py-4 sm:px-4 lg:px-4 w-screen max-w-full mx-0">
+      <div className="px-2 pt-4 pb-9 sm:px-4 lg:px-4 w-screen max-w-full mx-0">
         {activeTab === "builder" && <ResumeCompletionBanner />}
 
         {/* ════ BUILDER TAB ════ */}
