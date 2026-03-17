@@ -592,7 +592,7 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
             </div>
           </div>
         )}
-        <div className="flex gap-5 px-4 pb-20 pt-4 items-start">
+        <div className="flex gap-5 px-4 pb-11 pt-4 items-start">
           {/* Desktop floating form panel */}
           {!isPreviewExpanded && (
             <div
@@ -768,13 +768,13 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
             </div>
           )}
         </div>
-        <div className="w-full h-4" />
+        {/* <div className="w-full h-4" /> */}
       </>
     );
   };
 
   return (
-    <div className="min-h-screen bg-[#f1f3f6] font-sans tracking-[0.01em]">
+    <div className="min-h-screen bg-[#f1f3f6] font-sans tracking-[0.01em] md:pt-0 pt-20">
       {/* Sticky navbar like CV */}
       {!isPreviewExpanded && (
         <div ref={headerRef} className="sticky top-0 z-30 bg-[#f1f3f6]">

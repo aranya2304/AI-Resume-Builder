@@ -1237,7 +1237,7 @@ ${
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0 md:pt-0 pt-20">
       {/* Sticky navbar, same behavior as CV/Resume */}
 
       <div
