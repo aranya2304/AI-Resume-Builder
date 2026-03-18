@@ -324,8 +324,8 @@ function LandingPage() {
         <div className="absolute bottom-0 left-0 w-1/3 h-1/4 bg-blue-50 rounded-full blur-[120px] -z-10 opacity-50"></div>
 
         <div className="max-w-[1400px] w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-6 items-center">
-          <div className="flex flex-col gap-4 md:gap-6 text-center md:text-left items-center md:items-start w-full max-w-xl mx-auto md:mx-0">
-            <motion.h1
+         <div className="flex flex-col gap-4 md:gap-6 text-center lg:text-left items-center lg:items-start w-full max-w-xl mx-auto lg:mx-0">
+              <motion.h1
               variants={fadeUp}
               className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight select-none font-jakarta"
             >
@@ -357,8 +357,7 @@ function LandingPage() {
 
             <motion.div
               variants={fadeUp}
-              className="flex flex-col sm:flex-row gap-3 mt-3 select-none justify-center md:justify-start"
-            >
+             className="flex flex-col sm:flex-row gap-3 mt-3 select-none justify-center lg:justify-start"   >
               <button
                 onClick={() => navigate("/login")}
                 className="flex w-full sm:w-auto items-center justify-center gap-2 md:gap-3 px-4 md:px-10 py-3 md:py-5 text-sm md:text-lg font-bold text-white bg-gradient-to-r from-[#e65100] to-[#f4511e] rounded-xl whitespace-nowrap transition-all duration-300 hover:-translate-y-1 shadow-[0_10px_25px_rgba(230,81,0,0.3)] hover:shadow-[0_15px_35px_rgba(230,81,0,0.45)]"
