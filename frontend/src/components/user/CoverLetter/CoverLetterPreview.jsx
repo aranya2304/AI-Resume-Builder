@@ -238,8 +238,12 @@ const CoverLetterPreview = ({
 
       await new Promise((resolve) => {
         const root = createRoot(container);
-        const TemplateComponent = CoverLetterTemplatesMap[selectedTemplate] || CoverLetterTemplatesMap.professional;
-        root.render(<TemplateComponent formData={formData} exportDate={exportDate} />);
+        const TemplateComponent =
+          CoverLetterTemplatesMap[selectedTemplate] ||
+          CoverLetterTemplatesMap.professional;
+        root.render(
+          <TemplateComponent formData={formData} exportDate={exportDate} />,
+        );
         setTimeout(resolve, 400);
       });
 
@@ -311,12 +315,15 @@ const CoverLetterPreview = ({
     } catch (err) {
       console.error("PDF download error:", err);
     } finally {
-      if (container && container.parentNode) document.body.removeChild(container);
+      if (container && container.parentNode)
+        document.body.removeChild(container);
     }
   };
 
   // We bring the Template directly:
-  const TemplateComponent = CoverLetterTemplatesMap[selectedTemplate] || CoverLetterTemplatesMap.professional;
+  const TemplateComponent =
+    CoverLetterTemplatesMap[selectedTemplate] ||
+    CoverLetterTemplatesMap.professional;
 
   /* ── auto-fit ─────────────────────────────────────────────────────────── */
   useLayoutEffect(() => {
@@ -532,11 +539,6 @@ const CoverLetterPreview = ({
           <>
             <IconBtn onClick={resetZoom} title="Reset zoom (0)">
               <RotateCcw size={12} />
-            </IconBtn>
-            <Divider />
-
-            <IconBtn onClick={downloadPDF} title="Download PDF">
-              <Download size={14} />
             </IconBtn>
             <Divider />
           </>
