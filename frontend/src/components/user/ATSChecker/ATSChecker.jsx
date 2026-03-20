@@ -1,7 +1,7 @@
 import "./ATSChecker.css";
 import ATSPdfPreview from "./ATSPdfPreview";
-import ATSDocPreview from "./ATSDocPreview";
 import UserNavBar from "../UserNavBar/UserNavBar";
+import JobRecommendations from "./JobRecommendations";
 import {
   Upload,
   FileText,
@@ -356,6 +356,7 @@ function ErrorTable({ errors, type, onSelect }) {
 
 /* ═══════════════════ MAIN COMPONENT ═══════════════════ */
 const PANEL_HEIGHT = "calc(100vh - 180px)";
+const PREVIEW_HEIGHT = "1122px";
 
 const ATSChecker = ({ onSidebarToggle }) => {
   const fileInputRef = useRef(null);
@@ -653,7 +654,7 @@ const handleFileChange = async (e) => {
 
       {/* ── Page Header ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1
               className="text-2xl font-extrabold text-slate-900"
@@ -667,7 +668,7 @@ const handleFileChange = async (e) => {
           </div>
           <button
             onClick={() => fileInputRef.current.click()}
-            className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+            className="flex self-start sm:self-auto shrink-0 items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
           >
             <Upload size={16} />
             Upload Resume
@@ -771,6 +772,12 @@ const handleFileChange = async (e) => {
         </motion.div>
       )}
     </AnimatePresence>
+
+    {/* Job Recommendations Section */}
+    <JobRecommendations 
+      extractedData={analysisResult?.extractedData} 
+      isAnalyzing={isAnalyzing} 
+    />
   </div>
 
   {/* 🌀 BLUR OVERLAY - Shows during analysis */}
@@ -893,14 +900,13 @@ const handleFileChange = async (e) => {
             {(isMobilePreviewExpanded || !isMobile) && (
               <motion.div
                 initial={isMobile ? { height: 0, opacity: 0 } : false}
-                animate={{ height: "auto", opacity: 1 }}
+                animate={{ height: isMobile ? "calc(100vh - 180px)" : "100%", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col"
-                style={{ minHeight: PANEL_HEIGHT }}
+                className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col w-full"
               >
                {previewUrl ? (
-  <div className="w-full flex-1" style={{ minHeight: PANEL_HEIGHT }}>
+  <div className="w-full h-full flex-1">
     <ATSPdfPreview
       pdfUrl={previewUrl}
       onLoadSuccess={(pdf) => {
@@ -911,7 +917,7 @@ const handleFileChange = async (e) => {
   </div>
 ) : previewType === 'doc' && resumeText ? (
   // Show DOC preview with extracted text
-  <div className="w-full flex-1" style={{ minHeight: PANEL_HEIGHT }}>
+  <div className="w-full h-full flex-1">
     <ATSDocPreview text={resumeText} />
   </div>
 ) : (
