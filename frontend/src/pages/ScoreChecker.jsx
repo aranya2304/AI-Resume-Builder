@@ -15,14 +15,9 @@ import {
   ChevronDown,
   Target,
   FileSearch,
-  Eye
+  Eye,
 } from "lucide-react";
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  Tooltip
-} from "recharts";
+import { ResponsiveContainer, AreaChart, Area, Tooltip } from "recharts";
 import NavBar from "../components/NavBar";
 import Footer from "./Footer";
 import write from "../assets/Live.png";
@@ -39,7 +34,7 @@ const useInView = (threshold = 0.15) => {
       ([entry]) => {
         if (entry.isIntersecting) setIsVisible(true);
       },
-      { threshold }
+      { threshold },
     );
 
     observer.observe(ref.current);
@@ -92,7 +87,8 @@ const staggerContainer = {
 
 const ScoreChecker = () => {
   const navigate = useNavigate();
-  const isLoggedIn = typeof window !== "undefined" && !!localStorage.getItem("token");
+  const isLoggedIn =
+    typeof window !== "undefined" && !!localStorage.getItem("token");
 
   const handleFeatureClick = (path) => {
     if (isLoggedIn) navigate(path);
@@ -103,10 +99,10 @@ const ScoreChecker = () => {
   };
 
   const [text, setText] = useState(
-    "Senior Software Engineer\n\n- Spearheaded a team of 5 developers to build a scalable React application.\n- Improved page load speed by 40% using code splitting and lazy loading.\n- Integrated RESTful APIs and optimized database queries for better performance."
+    "Senior Software Engineer\n\n- Spearheaded a team of 5 developers to build a scalable React application.\n- Improved page load speed by 40% using code splitting and lazy loading.\n- Integrated RESTful APIs and optimized database queries for better performance.",
   );
 
-  const [openFaq, setOpenFaq] = useState(0);
+  const [openFaq, setOpenFaq] = useState(-1);
 
   const [breakRef, breakVisible] = useInView(0.15);
   const [calcRef, calcVisible] = useInView(0.15);
@@ -168,35 +164,28 @@ const ScoreChecker = () => {
       <NavBar />
 
       {/* 1) HERO SECTION (Centered, distinct from ATS) */}
-      <section className="relative px-6 pt-20 pb-16 bg-white">
+      <section className="relative px-6 pt-24 pb-8 md:pt-32 md:pb-24 lg:pt-24 lg:pb-16 bg-white overflow-hidden">
         <div className="mx-auto max-w-7xl">
           <motion.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.25 }}
-            className="grid items-center gap-12 lg:grid-cols-2"
+            className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16"
           >
             {/* LEFT: TEXT */}
-            <motion.div
-              variants={fadeUp}
-              className="text-center lg:text-left"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-orange-50 border border-orange-100 rounded-full">
-                <Activity size={14} className="text-[#e65100]" />
-                <span className="text-xs font-bold tracking-widest text-[#e65100] uppercase">
+            <motion.div variants={fadeUp} className="text-center lg:text-left flex flex-col items-center lg:items-start">
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 mb-8 bg-orange-50 border border-orange-100 rounded-full shadow-sm">
+                <Activity size={16} className="text-[#e65100]" />
+                <span className="text-sm font-bold tracking-widest text-[#e65100] uppercase">
                   Live Quality Scoring
                 </span>
               </div>
-
-              <h1 className="mb-6 text-6xl font-black leading-tight tracking-tight sm:text-7xl md:text-8xl xl:text-[96px] text-[#1a2e52]">
+              <h1 className="mb-8 text-6xl sm:text-7xl md:text-8xl xl:text-[100px] 2xl:text-[110px] font-black leading-[0.95] tracking-tighter text-[#1a2e52]">
                 Write Better. <br />
-                <span className="text-[#0077cc]">
-                  Rank Higher.
-                </span>
+                <span className="text-[#0077cc]">Rank Higher.</span>
               </h1>
-
-              <p className="max-w-xl mx-auto mb-10 text-xl font-light leading-relaxed text-gray-500 lg:mx-0">
+              <p className="max-w-2xl mb-10 text-lg sm:text-xl md:text-2xl font-light leading-relaxed text-gray-500/90">
                 See your resume score update in real-time as you type. Our AI
                 highlights vague wording and suggests impactful improvements
                 instantly.
@@ -206,15 +195,12 @@ const ScoreChecker = () => {
             {/* RIGHT: IMAGE */}
             <motion.div
               variants={fadeUp}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, amount: 0.25 }}
-              className="relative flex justify-center lg:justify-end"
+              className=" relative hidden lg:flex  justify-center lg:justify-end items-center"
             >
               <img
                 src={write}
                 alt="Resume scoring illustration"
-                className="hidden md:block w-full max-w-md lg:max-w-lg xl:max-w-xl object-contain"
+                className="hidden md:block w-full max-w-md lg:max-w-lg xl:max-w-2xl h-auto object-contain drop-shadow-2xl"
               />
             </motion.div>
           </motion.div>
@@ -222,7 +208,7 @@ const ScoreChecker = () => {
       </section>
 
       {/* 2) MAIN LIVE DEMO (Split Layout) */}
-      <section className="px-6 py-10">
+      <section className="px-6  py-0">
         <motion.div
           variants={staggerContainer}
           initial="hidden"
@@ -475,7 +461,9 @@ const ScoreChecker = () => {
       {/* 3) SECTION SCORE TILES */}
       <section
         ref={breakRef}
-        className={`px-6 py-12 bg-white transition-all duration-700 ${breakVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+        className={`px-6 py-12 bg-white transition-all duration-700 ${breakVisible
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-10"
           }`}
       >
         <div className="max-w-7xl mx-auto">
@@ -646,44 +634,50 @@ const ScoreChecker = () => {
         </div>
       </section>
 
-      {/* 5) WHY IT MATTERS (New Section) */}
-      <section className="px-6 py-20 bg-white">
+      {/* 5) WHY IT MATTERS (Updated Alignment) */}
+      <section className="px-4 sm:px-6 lg:px-8 py-16 sm:py-20 bg-white">
         <motion.div
           variants={staggerContainer}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center"
+          className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center lg:pl-10 xl:pl-16"
         >
-          <motion.div variants={fadeLeft}>
-            <h2 className="text-3xl md:text-5xl font-black text-[#1a2e52] leading-tight mb-8">
-              Why aim for a <br />
-              <span className="text-[#e65100]">90+ Score?</span>
+          {/* LEFT CONTENT */}
+          <motion.div
+            variants={fadeLeft}
+            className="text-center lg:text-left max-w-xl mx-auto lg:mx-0 lg:translate-x-8 xl:translate-x-12"
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#1a2e52] leading-tight mb-6">
+              Why aim for a{" "}
+              <span className="block text-[#e65100]">90+ Score?</span>
             </h2>
+
             <div className="space-y-6">
-              <div className="flex gap-4">
+              <div className="flex gap-4 text-left">
                 <div className="w-12 h-12 rounded-full bg-orange-50 text-[#e65100] flex items-center justify-center shrink-0">
                   <TrendingUp size={24} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-[#1a2e52]">
+                  <h4 className="text-lg sm:text-xl font-bold text-[#1a2e52]">
                     3x More Interviews
                   </h4>
-                  <p className="text-gray-500 leading-relaxed mt-2">
+                  <p className="text-gray-500 leading-relaxed mt-2 text-sm sm:text-base">
                     Candidates with optimized scores get significantly more
                     callbacks than those with generic resumes.
                   </p>
                 </div>
               </div>
-              <div className="flex gap-4">
+
+              <div className="flex gap-4 text-left">
                 <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0077cc] flex items-center justify-center shrink-0">
                   <User size={24} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-[#1a2e52]">
+                  <h4 className="text-lg sm:text-xl font-bold text-[#1a2e52]">
                     Pass the HUMAN Test
                   </h4>
-                  <p className="text-gray-500 leading-relaxed mt-2">
+                  <p className="text-gray-500 leading-relaxed mt-2 text-sm sm:text-base">
                     High scores mean better readability. Recruiters spend only 6
                     seconds scanning; make them count.
                   </p>
@@ -692,6 +686,7 @@ const ScoreChecker = () => {
             </div>
           </motion.div>
 
+          {/* RIGHT CARD */}
           <motion.div
             variants={fadeRight}
             whileHover={{ y: -8 }}
@@ -699,27 +694,37 @@ const ScoreChecker = () => {
             className="relative"
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-orange-100 to-blue-50 rounded-[3rem] transform rotate-3" />
-            <div className="relative bg-[#1a2e52] p-10 rounded-[3rem] text-white shadow-2xl">
-              <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-8">
+
+            <div className="relative bg-[#1a2e52] p-6 sm:p-8 lg:p-10 rounded-[2rem] sm:rounded-[3rem] text-white shadow-2xl">
+              <div className="flex items-center justify-between mb-6 sm:mb-8 border-b border-white/10 pb-6 sm:pb-8">
                 <div>
-                  <p className="text-blue-200 text-sm font-bold uppercase tracking-widest">
+                  <p className="text-blue-200 text-xs sm:text-sm font-bold uppercase tracking-widest">
                     Average Callback Rate
                   </p>
-                  <p className="text-4xl font-black mt-2">2.5%</p>
-                  <p className="text-sm text-gray-400 mt-1">Generic Resume</p>
+                  <p className="text-3xl sm:text-4xl font-black mt-2">2.5%</p>
+                  <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                    Generic Resume
+                  </p>
                 </div>
+
                 <div className="text-right">
-                  <p className="text-[#e65100] text-sm font-bold uppercase tracking-widest">
+                  <p className="text-[#e65100] text-xs sm:text-sm font-bold uppercase tracking-widest">
                     Optimized Rate
                   </p>
-                  <p className="text-4xl font-black mt-2 text-[#ffb700]">18%</p>
-                  <p className="text-sm text-gray-400 mt-1">Score 90+</p>
+                  <p className="text-3xl sm:text-4xl font-black mt-2 text-[#ffb700]">
+                    18%
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                    Score 90+
+                  </p>
                 </div>
               </div>
-              <p className="text-lg font-medium leading-relaxed opacity-90">
+
+              <p className="text-base sm:text-lg font-medium leading-relaxed opacity-90">
                 "I used the live scoring to tweak my bullet points. I went from
                 0 interviews in a month to 5 calls in one week."
               </p>
+
               <div className="mt-6 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20" />
                 <div>

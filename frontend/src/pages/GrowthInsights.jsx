@@ -132,7 +132,6 @@ const StrategicInsightsPage = () => {
             <p>Finding the right career path shouldn't be a guessing game. Our AI analyzes technical skills and hidden strengths to map out the perfect role for your profile.</p>
             <p>By pasting your existing resume, you unlock a deep-dive analysis that shows you exactly where you "know the game."</p>
           </div>
-
           <div className="bg-[#f0f7ff] border-l-4 border-[#0077cc] rounded-2xl p-6 sm:p-8 shadow-sm">
             <h3 className="text-xl font-bold text-[#1a2e52] mb-6">Our Analysis Engine helps you:</h3>
             <ul className="space-y-4">
@@ -173,21 +172,25 @@ const StrategicInsightsPage = () => {
           <RoadmapSection />
         </motion.div>
       </section>
-
+      
       {/* --- CTA --- */}
       <section className="relative px-6 sm:px-8 py-20 overflow-hidden bg-white">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-orange-50 rounded-full blur-[120px] -z-10 opacity-60" />
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="relative z-10 max-w-4xl mx-auto text-center">
           <h2 className="mb-6 text-4xl sm:text-5xl md:text-6xl font-black text-[#1a2e52] tracking-tighter leading-tight font-jakarta">
             Stop Searching. <br /><span className="text-[#0077cc]">Start Being Found.</span>
+
+
           </h2>
           <p className="max-w-2xl mx-auto mb-10 text-lg sm:text-xl font-medium text-gray-500">
+
             Let AI pinpoint the exact roles where your unique skills will truly shine.
           </p>
 
           <button
             onClick={() => handleFeatureClick("/user/dashboard")}
             className="group relative inline-flex items-center gap-3 px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:-translate-y-1 active:scale-95"
+
           >
             <Search size={22} />
             <span>Analyze My Career Now</span>

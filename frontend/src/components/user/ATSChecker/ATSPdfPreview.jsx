@@ -29,22 +29,22 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fitScale, setFitScale] = useState(1);
+  const [containerWidth, setContainerWidth] = useState(null);
 
-  /* ===== AUTO FIT WIDTH ===== */
   useEffect(() => {
-    const updateFit = () => {
-      if (!containerRef.current) return;
-      const width = containerRef.current.clientWidth - 48;
-      setFitScale(width / 794);
+    const updateWidth = () => {
+      if (containerRef.current) {
+        // padding is 24px on each side (p-6 = 1.5rem = 24px) -> 48px total padding subtracted
+        setContainerWidth(containerRef.current.clientWidth - 48);
+      }
     };
-
-    updateFit();
-    window.addEventListener("resize", updateFit);
-    return () => window.removeEventListener("resize", updateFit);
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  const scale = clamp(fitScale * zoom, ZOOM_MIN, ZOOM_MAX);
+  /* The conceptual zoom multiplier perfectly tied to container size */
+  const scale = clamp(zoom, ZOOM_MIN, ZOOM_MAX);
 
   const zoomIn = () => setZoom((z) => clamp(z + ZOOM_STEP, ZOOM_MIN, ZOOM_MAX));
   const zoomOut = () => setZoom((z) => clamp(z - ZOOM_STEP, ZOOM_MIN, ZOOM_MAX));
@@ -111,24 +111,27 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
       {/* ===== PDF VIEWER ===== */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-auto bg-gray-200 flex justify-center p-6"
+        className="flex-1 overflow-auto bg-gray-200 p-6"
       >
         {pdfUrl ? (
-          <Document
-            file={pdfUrl}
-            onLoadSuccess={(pdf) => {
-              onDocumentLoadSuccess(pdf);
-              if (onLoadSuccess) onLoadSuccess(pdf);
-            }}
-          >
+          <div className="w-fit mx-auto">
+            <Document
+              file={pdfUrl}
+              onLoadSuccess={(pdf) => {
+                onDocumentLoadSuccess(pdf);
+                if (onLoadSuccess) onLoadSuccess(pdf);
+              }}
+            >
 
-            <Page
-              pageNumber={pageNumber}
-              scale={scale}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-            />
-          </Document>
+              <Page
+                pageNumber={pageNumber}
+                scale={scale} 
+                width={containerWidth ? containerWidth : undefined}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+              />
+            </Document>
+          </div>
         ) : (
           <div className="text-slate-400">Upload a resume to preview</div>
         )}

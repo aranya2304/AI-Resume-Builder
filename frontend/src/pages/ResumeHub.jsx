@@ -134,7 +134,7 @@ const ResumeHubPage = () => {
       </section>
 
       {/* --- 2. WHAT IS RESUME HUB --- */}
-      <section ref={whatRef} className="px-8 py-20 bg-white font-['Outfit']">
+      <section ref={whatRef} className="px-8 py-0 md:py-16 lg:py-16 bg-white font-['Outfit']">
         <motion.div
           variants={staggerContainer}
           initial="hidden"
