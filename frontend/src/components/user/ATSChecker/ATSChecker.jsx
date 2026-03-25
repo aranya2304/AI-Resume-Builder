@@ -20,6 +20,8 @@ import { pdfjs } from "react-pdf";
 import "../../../styles/react-pdf/TextLayer.css";
 import "../../../styles/react-pdf/AnnotationLayer.css";
 
+import mammoth from "mammoth";
+import ATSDocPreview from "./ATSDocPreview";
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url,
@@ -417,11 +419,27 @@ const ATSChecker = ({ onSidebarToggle }) => {
     return () => window.removeEventListener("resize", h);
   }, []);
 
-  /* ── Clear session on mount ── */
+  /* ── Saves state after refresh ── */
   useEffect(() => {
-    sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem("ats_analysis_result");
-  }, []);
+  const savedUrl = sessionStorage.getItem(SESSION_KEY);
+  const savedAnalysis = sessionStorage.getItem("ats_analysis_result");
+
+  if (savedUrl) {
+    setPreviewUrl(savedUrl);
+    setPreviewType("pdf"); // assuming pdf for stored blob
+  }
+
+  if (savedAnalysis) {
+    const parsed = JSON.parse(savedAnalysis);
+    setAnalysisResult(parsed);
+
+    if (parsed.pronounAnalysis?.detected) {
+      setPronounErrors(parsed.pronounAnalysis.detected);
+    }
+
+    setResumeText(parsed?.text || "");
+  }
+}, []);
 
   /* ── Spell locator ── */
   useEffect(() => {
@@ -507,11 +525,30 @@ const handleFileChange = async (e) => {
     setPreviewUrl(url);
     setPreviewType('pdf');
     sessionStorage.setItem(SESSION_KEY, url);
-  } else if (['doc', 'docx'].includes(fileExtension)) {
-    // For DOC/DOCX, we'll show text preview after analysis
-    setPreviewType('doc');
-    setPreviewUrl(null); // Will use text from backend
+  } 
+   else if (fileExtension === "docx") {
+  setPreviewType("doc");
+  setPreviewUrl(null);
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    const extractedText = result.value;
+
+    setResumeText(extractedText);
+  } catch (err) {
+    console.error("DOCX parsing failed:", err);
+    setResumeText("Failed to preview DOCX file.");
   }
+} else if (fileExtension === "doc") {
+  setPreviewType("doc");
+  setPreviewUrl(null);
+
+  setResumeText(
+    "⚠️ .doc format not supported. Please upload DOCX or PDF."
+  );
+}
 
   const formData = new FormData();
   formData.append("resume", file);
@@ -545,37 +582,40 @@ const handleFileChange = async (e) => {
     if (data.success) {
       const updatedData = { ...data.data };
       
-      if (updatedData.sectionScores) {
-        updatedData.sectionScores = updatedData.sectionScores.map(section => {
-          if (section.sectionName === "File Format Compatibility") {
-            return {
-              ...section,
-              score: isValidFormat ? section.maxScore : 0,
-              status: isValidFormat ? "ok" : "error",
-              suggestions: isValidFormat ? [] : ["Upload resume in PDF or DOC/DOCX format."]
-            };
-          }
-          return section;
-        });
+      // if (updatedData.sectionScores) {
+      //   updatedData.sectionScores = updatedData.sectionScores.map(section => {
+      //     if (section.sectionName === "File Format Compatibility") {
+      //       return {
+      //         ...section,
+      //         score: isValidFormat ? section.maxScore : 0,
+      //         status: isValidFormat ? "ok" : "error",
+      //         suggestions: isValidFormat ? [] : ["Upload resume in PDF or DOC/DOCX format."]
+      //       };
+      //     }
+      //     return section;
+      //   });
         
-        const totalScore = updatedData.sectionScores.reduce(
-          (sum, section) => sum + (section.score || 0),
-          0
-        );
-        const maxTotal = updatedData.sectionScores.reduce(
-          (sum, section) => sum + (section.maxScore || 0),
-          0
-        );
+      //   const totalScore = updatedData.sectionScores.reduce(
+      //     (sum, section) => sum + (section.score || 0),
+      //     0
+      //   );
+      //   const maxTotal = updatedData.sectionScores.reduce(
+      //     (sum, section) => sum + (section.maxScore || 0),
+      //     0
+      //   );
         
-        updatedData.overallScore = maxTotal > 0 
-          ? Math.round((totalScore / maxTotal) * 100) 
-          : 0;
-      }
+      //   updatedData.overallScore = maxTotal > 0 
+      //     ? Math.round((totalScore / maxTotal) * 100) 
+      //     : 0;
+      // }
       
+      setAnalysisResult(data.data);
       setAnalysisResult(updatedData);
       if (updatedData.pronounAnalysis?.detected)
         setPronounErrors(updatedData.pronounAnalysis.detected);
-      setResumeText(updatedData?.text || "");
+      if (fileExtension !== "docx") {
+        setResumeText(updatedData?.text || "");
+      }
       sessionStorage.setItem("ats_analysis_result", JSON.stringify(updatedData));
     } else {
       console.error("API returned success: false →", data?.message || data);
@@ -905,7 +945,7 @@ const handleFileChange = async (e) => {
                 transition={{ duration: 0.3 }}
                 className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col w-full"
               >
-               {previewUrl ? (
+  {previewType === "pdf" && previewUrl ? (
   <div className="w-full h-full flex-1">
     <ATSPdfPreview
       pdfUrl={previewUrl}
@@ -915,11 +955,16 @@ const handleFileChange = async (e) => {
       }}
     />
   </div>
-) : previewType === 'doc' && resumeText ? (
-  // Show DOC preview with extracted text
-  <div className="w-full h-full flex-1">
-    <ATSDocPreview text={resumeText} />
-  </div>
+) : previewType === "doc" ? (
+  resumeText ? (
+    <div className="w-full h-full flex-1">
+      <ATSDocPreview text={resumeText} />
+    </div>
+  ) : (
+    <div className="flex items-center justify-center h-full text-sm text-gray-500">
+      Extracting DOCX preview...
+    </div>
+  )
 ) : (
   <UploadZone onFileChange={handleFileChange} />
 )}
