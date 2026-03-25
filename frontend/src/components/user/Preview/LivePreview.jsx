@@ -32,6 +32,14 @@ import {
   Globe,
 } from "lucide-react";
 import { FaLinkedin } from "react-icons/fa";
+import ResumeBuilderTemplates from "../ResumeBuilder/ResumeBuilderTemplates";
+
+import jsPDF from "jspdf";
+import mergeWithSampleData, {
+  hasAnyUserData,
+} from "../../../utils/Datahelpers";
+import html2canvas from "html2canvas";
+
 import {
   getTemplateComponent,
   getTemplateCSS,
@@ -223,6 +231,108 @@ const LivePreview = forwardRef((props, ref) => {
   const [showGrid, setShowGrid] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
+
+  const downloadPDF = async () => {
+    const CV_WIDTH = 794;
+    let selectedTemplate = currentTemplate.id.replace(/-/g, "");
+    const TemplateComponent = ResumeBuilderTemplates[selectedTemplate];
+    if (!TemplateComponent) return;
+
+    let container;
+    try {
+      // Create hidden container at full A4 width
+      container = document.createElement("div");
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: `${CV_WIDTH}px`, // full width
+        background: "#ffffff",
+        zIndex: "-1",
+      });
+
+      document.body.appendChild(container);
+
+      const { createRoot } = await import("react-dom/client");
+
+      await new Promise((resolve) => {
+        const root = createRoot(container);
+        root.render(<TemplateComponent data={formData} />);
+        setTimeout(resolve, 400);
+      });
+      // Capture full canvas
+      const canvas = await html2canvas(container, {
+        scale: 3,
+        useCORS: true,
+        logging: false,
+        windowWidth: CV_WIDTH,
+      });
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const mmPageW = 210;
+      const mmPageH = 297;
+
+      const pxPerMm = canvas.width / mmPageW;
+      const pxSliceH = Math.round(mmPageH * pxPerMm);
+
+      let yPx = 0;
+      let first = true;
+
+      while (yPx < canvas.height) {
+        const sliceH = Math.min(pxSliceH, canvas.height - yPx);
+
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = pxSliceH;
+
+        const ctx = pageCanvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+        ctx.drawImage(
+          canvas,
+          0,
+          yPx,
+          canvas.width,
+          sliceH,
+          0,
+          0,
+          canvas.width,
+          sliceH,
+        );
+
+        const imgData = pageCanvas.toDataURL("image/jpeg", 0.96);
+
+        if (!first) pdf.addPage();
+
+        pdf.addImage(imgData, "JPEG", 0, 0, mmPageW, mmPageH);
+
+        yPx += sliceH;
+        first = false;
+      }
+
+      const clean = (str) =>
+        str
+          ?.replace(/[^a-z0-9_\- ]/gi, "")
+          .trim()
+          .replace(/\s+/g, "_");
+
+      const name = clean(formData?.fullName) || "Resume";
+      const template = clean(selectedTemplate) || "Template";
+
+      pdf.save(`${name}_${template}.pdf`);
+    } catch (err) {
+      console.error("PDF download error:", err);
+    } finally {
+      if (container && container.parentNode) document.body.removeChild(container);
+    }
+  };
+
 
   useEffect(() => {
     const checkScreen = () => {
@@ -456,42 +566,42 @@ const LivePreview = forwardRef((props, ref) => {
             edu.graduationDate ||
             edu.location,
         ) && (
-          <Section title="Education">
-            {education.map(
-              (edu) =>
-                (edu?.degree ||
-                  edu?.startDate ||
-                  edu?.graduationDate ||
-                  edu?.school ||
-                  edu?.gpa) && (
-                  <div
-                    key={edu?.id}
-                    className="border-l-2 border-slate-200 pl-4 mb-2"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                      <h3 className="font-medium text-slate-900">
-                        {edu?.degree}
-                      </h3>
-                      {edu?.startDate && edu?.graduationDate && (
-                        <span className="text-sm text-slate-500">
-                          {formatMonthYear(edu?.startDate)} -{" "}
-                          {formatMonthYear(edu?.graduationDate)}
-                        </span>
+            <Section title="Education">
+              {education.map(
+                (edu) =>
+                  (edu?.degree ||
+                    edu?.startDate ||
+                    edu?.graduationDate ||
+                    edu?.school ||
+                    edu?.gpa) && (
+                    <div
+                      key={edu?.id}
+                      className="border-l-2 border-slate-200 pl-4 mb-2"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                        <h3 className="font-medium text-slate-900">
+                          {edu?.degree}
+                        </h3>
+                        {edu?.startDate && edu?.graduationDate && (
+                          <span className="text-sm text-slate-500">
+                            {formatMonthYear(edu?.startDate)} -{" "}
+                            {formatMonthYear(edu?.graduationDate)}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-sm text-slate-600">{edu?.school}</p>
+
+                      {edu?.gpa && (
+                        <p className="text-sm text-slate-500">
+                          GPA: {edu?.gpa} / 10.0
+                        </p>
                       )}
                     </div>
-
-                    <p className="text-sm text-slate-600">{edu?.school}</p>
-
-                    {edu?.gpa && (
-                      <p className="text-sm text-slate-500">
-                        GPA: {edu?.gpa} / 10.0
-                      </p>
-                    )}
-                  </div>
-                ),
-            )}
-          </Section>
-        )}
+                  ),
+              )}
+            </Section>
+          )}
 
         {experience?.some(
           (exp) =>
@@ -502,39 +612,39 @@ const LivePreview = forwardRef((props, ref) => {
             exp.endDate ||
             exp.location,
         ) && (
-          <Section title="Experience">
-            {experience.map(
-              (exp) =>
-                (exp?.title ||
-                  exp?.company ||
-                  exp?.startDate ||
-                  exp?.endDate ||
-                  exp?.description) && (
-                  <div key={exp?.id}>
-                    <div className="mb-6">
-                      <div className="flex justify-between items-start mb-1">
-                        <div>
-                          <h3 className="text-sm font-semibold text-slate-900">
-                            {exp?.title}
-                          </h3>
-                          <p className="text-xs text-slate-500">
-                            {exp?.company}
-                          </p>
+            <Section title="Experience">
+              {experience.map(
+                (exp) =>
+                  (exp?.title ||
+                    exp?.company ||
+                    exp?.startDate ||
+                    exp?.endDate ||
+                    exp?.description) && (
+                    <div key={exp?.id}>
+                      <div className="mb-6">
+                        <div className="flex justify-between items-start mb-1">
+                          <div>
+                            <h3 className="text-sm font-semibold text-slate-900">
+                              {exp?.title}
+                            </h3>
+                            <p className="text-xs text-slate-500">
+                              {exp?.company}
+                            </p>
+                          </div>
+                          <span className="text-xs text-slate-500 whitespace-nowrap">
+                            {formatMonthYear(exp?.startDate)} -{" "}
+                            {!/[a-zA-Z]/.test(exp?.endDate)
+                              ? formatMonthYear(exp?.endDate)
+                              : exp?.endDate}
+                          </span>
                         </div>
-                        <span className="text-xs text-slate-500 whitespace-nowrap">
-                          {formatMonthYear(exp?.startDate)} -{" "}
-                          {!/[a-zA-Z]/.test(exp?.endDate)
-                            ? formatMonthYear(exp?.endDate)
-                            : exp?.endDate}
-                        </span>
+                        <p className="mt-2 break-words">{exp.description}</p>
                       </div>
-                      <p className="mt-2 break-words">{exp.description}</p>
                     </div>
-                  </div>
-                ),
-            )}
-          </Section>
-        )}
+                  ),
+              )}
+            </Section>
+          )}
 
         {projects?.some(
           (project) =>
@@ -545,106 +655,106 @@ const LivePreview = forwardRef((props, ref) => {
             project?.link?.liveLink ||
             project?.link?.other,
         ) && (
-          <Section title="Projects">
-            {projects.map(
-              (prj) =>
-                (prj?.name ||
-                  prj?.link?.github ||
-                  prj?.link?.liveLink ||
-                  prj?.link?.other ||
-                  prj?.technologies ||
-                  prj?.description) && (
-                  <div key={prj?.id} className="space-y-4">
-                    {/* Project Item */}
-                    <div className="space-y-1">
-                      <div className="flex items-start justify-between gap-4">
-                        <h3 className="font-bold text-slate-900">
-                          {prj?.name}
-                        </h3>
+            <Section title="Projects">
+              {projects.map(
+                (prj) =>
+                  (prj?.name ||
+                    prj?.link?.github ||
+                    prj?.link?.liveLink ||
+                    prj?.link?.other ||
+                    prj?.technologies ||
+                    prj?.description) && (
+                    <div key={prj?.id} className="space-y-4">
+                      {/* Project Item */}
+                      <div className="space-y-1">
+                        <div className="flex items-start justify-between gap-4">
+                          <h3 className="font-bold text-slate-900">
+                            {prj?.name}
+                          </h3>
 
-                        <div className="flex gap-2">
-                          {prj?.link?.github && (
-                            <a
-                              href={prj?.link?.github}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
-                            >
-                              GitHub
-                            </a>
-                          )}
-                          {prj?.link?.liveLink && (
-                            <a
-                              href={prj?.link?.liveLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
-                            >
-                              Live
-                            </a>
-                          )}
-                          {prj?.link?.other && (
-                            <a
-                              href={prj?.link?.other}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
-                            >
-                              Other
-                            </a>
-                          )}
+                          <div className="flex gap-2">
+                            {prj?.link?.github && (
+                              <a
+                                href={prj?.link?.github}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
+                              >
+                                GitHub
+                              </a>
+                            )}
+                            {prj?.link?.liveLink && (
+                              <a
+                                href={prj?.link?.liveLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
+                              >
+                                Live
+                              </a>
+                            )}
+                            {prj?.link?.other && (
+                              <a
+                                href={prj?.link?.other}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
+                              >
+                                Other
+                              </a>
+                            )}
+                          </div>
                         </div>
+
+                        <p className="text-xs text-slate-600">
+                          {prj?.technologies}
+                        </p>
+
+                        <p className="text-sm text-slate-700 leading-relaxed">
+                          {prj?.description}
+                        </p>
                       </div>
-
-                      <p className="text-xs text-slate-600">
-                        {prj?.technologies}
-                      </p>
-
-                      <p className="text-sm text-slate-700 leading-relaxed">
-                        {prj?.description}
-                      </p>
                     </div>
-                  </div>
-                ),
-            )}
-          </Section>
-        )}
+                  ),
+              )}
+            </Section>
+          )}
 
         {certifications?.some(
           (cert) => cert.name || cert.issuer || cert.date || cert.link,
         ) && (
-          <Section title="Certifications">
-            <section className="space-y-4">
-              {certifications.map((cert) => (
-                <div
-                  key={cert.id}
-                  className="flex items-start justify-between gap-4"
-                >
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-900">
-                      {cert.name}
-                    </h3>
+            <Section title="Certifications">
+              <section className="space-y-4">
+                {certifications.map((cert) => (
+                  <div
+                    key={cert.id}
+                    className="flex items-start justify-between gap-4"
+                  >
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-900">
+                        {cert.name}
+                      </h3>
 
-                    <p className="text-sm text-slate-600">{cert.issuer}</p>
+                      <p className="text-sm text-slate-600">{cert.issuer}</p>
 
-                    <p className="text-sm text-slate-500">{cert.date}</p>
+                      <p className="text-sm text-slate-500">{cert.date}</p>
+                    </div>
+
+                    {cert.link && (
+                      <a
+                        href={cert.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
+                      >
+                        Credential
+                      </a>
+                    )}
                   </div>
-
-                  {cert.link && (
-                    <a
-                      href={cert.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
-                    >
-                      Credential
-                    </a>
-                  )}
-                </div>
-              ))}
-            </section>
-          </Section>
-        )}
+                ))}
+              </section>
+            </Section>
+          )}
 
         {(skills?.technical?.length !== 0 || skills?.soft?.length !== 0) && (
           <Section title="Skills">
@@ -866,6 +976,105 @@ const LivePreview = forwardRef((props, ref) => {
         >
           {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
         </IconBtn>
+
+        {/* compact overflow menu */}
+        {isCompact && (
+          <div style={{ position: "relative" }}>
+            <IconBtn
+              onClick={() => setMoreOpen((o) => !o)}
+              title="More"
+              active={moreOpen}
+            >
+              {moreOpen ? <X size={14} /> : <Menu size={14} />}
+            </IconBtn>
+            {moreOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 6px)",
+                  right: 0,
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 10,
+                  padding: 6,
+                  zIndex: 100,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.13)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  minWidth: 150,
+                }}
+              >
+                {[
+                  {
+                    icon: <RotateCcw size={13} />,
+                    label: "Reset zoom",
+                    action: () => {
+                      resetZoom();
+                      setMoreOpen(false);
+                    },
+                  },
+                  {
+                    icon: <Printer size={13} />,
+                    label: "Print",
+                    action: () => {
+                      window.print();
+                      setMoreOpen(false);
+                    },
+                  },
+                  {
+                    icon: <Download size={13} />,
+                    label: "Download PDF",
+                    action: () => {
+                      downloadPDF();
+                      setMoreOpen(false);
+                    },
+                  },
+                  {
+                    icon: showGrid ? <X size={13} /> : <Eye size={13} />,
+                    label: showGrid ? "Hide grid" : "Show grid",
+                    action: () => {
+                      setShowGrid((g) => !g);
+                      setMoreOpen(false);
+                    },
+                  },
+                ].map(({ icon, label, action }) => (
+                  <button
+                    key={label}
+                    onClick={action}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 9,
+                      padding: "7px 10px",
+                      borderRadius: 7,
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      color: "#334155",
+                      fontSize: 12,
+                      fontFamily: "system-ui, sans-serif",
+                      fontWeight: 500,
+                      textAlign: "left",
+                      whiteSpace: "nowrap",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "#f8fafc")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "none")
+                    }
+                  >
+                    {icon}
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+
       </div>
     </div>
   );
