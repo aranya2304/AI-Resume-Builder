@@ -82,7 +82,7 @@ const CoverLetterExamples = () => {
     <div className="min-h-screen bg-slate-50 font-['Outfit'] selection:bg-blue-100">
       <NavBar />
 
-      <section className="relative pt-16 lg:pt-32 pb-20 px-12 pr-16 overflow-hidden bg-white ">
+      <section className="relative pt-16 lg:pt-32 pb-0 px-12 pr-16 overflow-hidden bg-white ">
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-50/50 to-transparent rounded-bl-[100px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-gradient-to-t from-orange-50/50 to-transparent rounded-tr-[100px] pointer-events-none" />
 
@@ -113,7 +113,7 @@ const CoverLetterExamples = () => {
         </div>
       </section>
 
-      <section className="px-6 pt-10 pb-14">
+      <section className="px-6 pt-4 pb-14">
         <div className="max-w-4xl mx-auto">
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-2xl blur opacity-20 group-hover:opacity-35 transition-opacity duration-300"></div>
