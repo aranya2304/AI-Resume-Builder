@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import UpToSkillsImg from "../assets/logo6.png";
 import { ChevronDown } from "lucide-react";
+import axiosInstance from "../api/axios";
 // Import React Icons
 import { SiYoutube, SiInstagram, SiLinkedin, SiFacebook } from "react-icons/si";
 import { FaArrowRight } from "react-icons/fa6";
@@ -46,19 +47,27 @@ function Footer() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("idle"); // idle, loading, success, error
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setStatus("error");
       return;
     }
     setStatus("loading");
-    // Simulate API call
-    setTimeout(() => {
-      setStatus("success");
-      setEmail("");
-      setTimeout(() => setStatus("idle"), 3000); // Reset after 3s
-    }, 1500);
+    
+    try {
+      const response = await axiosInstance.post("/api/newsletter/subscribe", { email });
+      if (response.status === 200) {
+        setStatus("success");
+        setEmail("");
+        setTimeout(() => setStatus("idle"), 3000); // Reset after 3s
+      } else {
+        setStatus("error");
+      }
+    } catch (error) {
+      console.error("Subscription error:", error);
+      setStatus("error");
+    }
   };
 
   // Responsive header and link styles

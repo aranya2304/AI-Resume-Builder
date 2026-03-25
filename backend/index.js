@@ -22,6 +22,7 @@ import downloadsRouter from "./routers/downloads.router.js";
 import coverLetterRouter from "./routers/coverletter.js";  // ✅ NEW
 import dashboardRouter from "./routers/dashboard.router.js";
 import analyticsRouter from "./routes/analytics.routes.js";
+import newsletterRouter from "./routers/newsletter.router.js";
 
 import chatbotRouter from "./routers/chatbot.router.js";
 
@@ -76,6 +77,7 @@ app.use("/api/plans", planRouter);
 app.use("/api/blog", blogRouter);
 app.use("/api/chatbot", chatbotRouter);
 app.use("/api/dashboard", dashboardRouter);
+app.use("/api/newsletter", newsletterRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api", analyticsRouter);
 
