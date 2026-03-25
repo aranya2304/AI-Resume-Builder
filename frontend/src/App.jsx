@@ -52,7 +52,6 @@ import AdminBlog from "./components/admin/AdminBlog/AdminBlog";
 
 // User routes
 import UserRoutes from "./pages/UserRoutes";
-import ResumeExample from "./pages/ResumeExample";
 import ResumeGuide from "./pages/ResumeGuide";
 import ResumeExamplesPage from "./pages/ResumeExample";
 import CoverLetterTemplates from "./pages/CoverLetterTemplates";
