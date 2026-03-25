@@ -1,6 +1,7 @@
 
 import React from 'react';
 import './JessicaClaire3.css';
+import { formatExternalUrl, formatMailto, formatTel, getVisibleExtraLinks } from './socialUtils';
 
 const JessicaClaire3 = ({ data }) => {
     const {
@@ -11,6 +12,7 @@ const JessicaClaire3 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        extraLinks = [],
         experience = [],
         education = [],
         skills = { technical: [], soft: [] },
@@ -26,6 +28,7 @@ const JessicaClaire3 = ({ data }) => {
     const technicalSkills = skills?.technical || [];
     const softSkills = skills?.soft || [];
     const allSkills = [...technicalSkills, ...softSkills];
+    const visibleExtraLinks = getVisibleExtraLinks(extraLinks);
     // Split skills for 2 columns if needed, but this template seems to put them in one block or simple list
     // The original HTML uses two columns for skills within the right box.
     const halfSkill = Math.ceil(allSkills.length / 2);
@@ -57,10 +60,17 @@ const JessicaClaire3 = ({ data }) => {
                     <div className="address">
                         <ul>
                             {location && <li>{location}</li>}
-                            {phone && <li>{phone}</li>}
-                            {email && <li>{email}</li>}
-                            {linkedin && <li>{linkedin}</li>}
-                            {website && <li>{website}</li>}
+                            {phone && <li><a href={formatTel(phone)} target="_blank" rel="noopener noreferrer">{phone}</a></li>}
+                            {email && <li><a href={formatMailto(email)} target="_blank" rel="noopener noreferrer">{email}</a></li>}
+                            {linkedin && <li><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">{linkedin}</a></li>}
+                            {website && <li><a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">{website}</a></li>}
+                            {visibleExtraLinks.map((link, index) => (
+                                <li key={`${link.label}-${index}`}>
+                                    <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">
+                                        {link.label}: {link.url}
+                                    </a>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                 </div>

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import './JessicaClaire2.css';
+import { formatExternalUrl, formatMailto, formatTel, getVisibleExtraLinks } from './socialUtils';
 
 const JessicaClaire2 = ({ data }) => {
     const {
@@ -11,6 +12,7 @@ const JessicaClaire2 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        extraLinks = [],
         experience = [],
         education = [],
         skills = { technical: [], soft: [] },
@@ -21,6 +23,7 @@ const JessicaClaire2 = ({ data }) => {
     const technicalSkills = skills?.technical || [];
     const softSkills = skills?.soft || [];
     const allSkills = [...technicalSkills, ...softSkills];
+    const visibleExtraLinks = getVisibleExtraLinks(extraLinks);
     const halfSkill = Math.ceil(allSkills.length / 2);
     const skillsCol1 = allSkills.slice(0, halfSkill);
     const skillsCol2 = allSkills.slice(halfSkill);
@@ -45,10 +48,25 @@ const JessicaClaire2 = ({ data }) => {
                             <li className="first">
                                 {location}
                             </li>
-                            {phone && <li>{phone}</li>}
-                            {email && <li>{email}</li>}
-                            {linkedin && <li>{linkedin}</li>}
-                            {website && <li>{website}</li>}
+                            {phone && <li><a href={formatTel(phone)} target="_blank" rel="noopener noreferrer">{phone}</a></li>}
+                            {email && <li><a href={formatMailto(email)} target="_blank" rel="noopener noreferrer">{email}</a></li>}
+                            {linkedin && (
+                                <li>
+                                    <a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">{linkedin}</a>
+                                </li>
+                            )}
+                            {website && (
+                                <li>
+                                    <a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">{website}</a>
+                                </li>
+                            )}
+                            {visibleExtraLinks.map((link, index) => (
+                                <li key={`${link.label}-${index}`}>
+                                    <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">
+                                        {link.label}: {link.url}
+                                    </a>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                 </div>

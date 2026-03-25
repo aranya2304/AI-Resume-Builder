@@ -1,4 +1,5 @@
 import { Send } from "lucide-react";
+import { formatExternalUrl, formatMailto, formatTel } from "../../Templates/socialUtils";
 
 const ClosingForm = ({ formData, onInputChange, highlightEmpty }) => {
   const salutationOptions = [
@@ -71,13 +72,13 @@ const ClosingForm = ({ formData, onInputChange, highlightEmpty }) => {
           </p>
           <p className="text-sm font-semibold text-slate-900">{formData.fullName || "Your Name"}</p>
           {formData.email && (
-            <p className="text-xs text-slate-500">{formData.email}</p>
+            <p className="text-xs text-slate-500"><a href={formatMailto(formData.email)} className="hover:underline">{formData.email}</a></p>
           )}
           {formData.phone && (
-            <p className="text-xs text-slate-500">{formData.phone}</p>
+            <p className="text-xs text-slate-500"><a href={formatTel(formData.phone)} className="hover:underline">{formData.phone}</a></p>
           )}
           {formData.linkedin && (
-            <p className="text-xs text-slate-500">{formData.linkedin}</p>
+            <p className="text-xs text-slate-500"><a href={formatExternalUrl(formData.linkedin)} target="_blank" rel="noopener noreferrer" className="hover:underline">{formData.linkedin}</a></p>
           )}
         </div>
       </div>

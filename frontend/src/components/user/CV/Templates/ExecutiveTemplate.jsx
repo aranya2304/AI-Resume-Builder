@@ -1,4 +1,5 @@
 import React from "react";
+import { formatExternalUrl, getVisibleExtraLinks } from "../../Templates/socialUtils";
 
 const ExecutiveTemplate = ({ formData }) => {
   const {
@@ -16,6 +17,8 @@ const ExecutiveTemplate = ({ formData }) => {
     projects,
     certifications,
   } = formData;
+
+  const visibleExtraLinks = getVisibleExtraLinks(formData?.extraLinks);
 
   return (
     <div className="w-full flex text-[11px] leading-relaxed">
@@ -48,27 +51,27 @@ const ExecutiveTemplate = ({ formData }) => {
             {linkedin && (
               <div>
                 <p className="font-semibold text-gray-400">LinkedIn</p>
-                <p className="break-words">{linkedin}</p>
+                <p className="break-words"><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{linkedin}</a></p>
               </div>
             )}
             {github && (
               <div>
                 <p className="font-semibold text-gray-400">GitHub</p>
-                <p className="break-words">{github}</p>
+                <p className="break-words"><a href={formatExternalUrl(github)} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{github}</a></p>
               </div>
             )}
             {website && (
               <div>
                 <p className="font-semibold text-gray-400">Website</p>
-                <p className="break-words">{website}</p>
+                <p className="break-words"><a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{website}</a></p>
               </div>
             )}
             {/* Extra Links */}
-            {formData?.extraLinks?.map((link, index) => (
+            {visibleExtraLinks.map((link, index) => (
               <div key={index}>
                 <p className="font-semibold text-gray-400">{link.label}</p>
                 <p className="break-words">
-                  <a href={link.url.startsWith("http") ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
+                  <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
                     {link.url}
                   </a>
                 </p>

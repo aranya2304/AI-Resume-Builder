@@ -1,6 +1,10 @@
 import React from "react";
 import SocialLinks from "../components/SocialLinks";
+import { formatExternalUrl, getVisibleExtraLinks } from "../../Templates/socialUtils";
 const AcademicTemplate = ({ formData }) => (
+  (() => {
+    const visibleExtraLinks = getVisibleExtraLinks(formData?.extraLinks);
+    return (
   <div
     className="bg-white w-full border border-slate-300 p-16 min-h-[1400px] max-w-[820px] resume-root space-y-6 overflow-hidden break-words"
     style={{ fontFamily: '"Garamond", "Times New Roman", serif' }}
@@ -17,16 +21,26 @@ const AcademicTemplate = ({ formData }) => (
         </div>
         {(formData.linkedin || formData.website) && (
           <div className="text-slate-600 text-sm mt-1">
-            {[formData.linkedin, formData.website].filter(Boolean).join(" • ")}
+            {formData.linkedin && (
+              <a href={formatExternalUrl(formData.linkedin)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                {formData.linkedin}
+              </a>
+            )}
+            {formData.linkedin && formData.website && <span> • </span>}
+            {formData.website && (
+              <a href={formatExternalUrl(formData.website)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                {formData.website}
+              </a>
+            )}
           </div>
         )}
         {/* Extra Links */}
-        {formData?.extraLinks?.length > 0 && (
+        {visibleExtraLinks.length > 0 && (
           <div className="text-slate-600 text-sm mt-1">
-            {formData.extraLinks.map((link, index) => (
+            {visibleExtraLinks.map((link, index) => (
               <a 
                 key={index}
-                href={link.url.startsWith("http") ? link.url : `https://${link.url}`} 
+                href={formatExternalUrl(link.url)} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline mr-2"
@@ -187,6 +201,8 @@ const AcademicTemplate = ({ formData }) => (
       </div>
     )}
   </div>
+    );
+  })()
 );
 
 export default AcademicTemplate;

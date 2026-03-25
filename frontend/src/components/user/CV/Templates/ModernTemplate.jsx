@@ -1,4 +1,5 @@
 import React from "react";
+import { formatExternalUrl, getVisibleExtraLinks } from "../../Templates/socialUtils";
 
 const ModernTemplate = ({ formData }) => {
   const {
@@ -16,6 +17,8 @@ const ModernTemplate = ({ formData }) => {
     projects,
     certifications,
   } = formData;
+
+  const visibleExtraLinks = getVisibleExtraLinks(formData?.extraLinks);
 
   return (
     <div className="w-full text-[11px] leading-relaxed text-gray-800 bg-white">
@@ -47,28 +50,32 @@ const ModernTemplate = ({ formData }) => {
           {linkedin && (
             <div className="flex items-center gap-2">
               <span className="font-semibold">LinkedIn:</span>
-              <span>{linkedin}</span>
+              <a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="text-blue-300 underline">
+                {linkedin}
+              </a>
             </div>
           )}
           {github && (
             <div className="flex items-center gap-2">
               <span className="font-semibold">GitHub:</span>
-              <span>{github}</span>
+              <a href={formatExternalUrl(github)} target="_blank" rel="noopener noreferrer" className="text-blue-300 underline">
+                {github}
+              </a>
             </div>
           )}
           {website && (
             <div className="flex items-center gap-2">
               <span className="font-semibold">Website:</span>
-              <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-300 underline">
+              <a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer" className="text-blue-300 underline">
                 {website}
               </a>
             </div>
           )}
           {/* Extra Links */}
-          {formData?.extraLinks?.map((link, index) => (
+          {visibleExtraLinks.map((link, index) => (
             <div key={index} className="flex items-center gap-2">
               <span className="font-semibold">{link.label}:</span>
-              <a href={link.url.startsWith("http") ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-300 underline">
+              <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer" className="text-blue-300 underline">
                 {link.url}
               </a>
             </div>

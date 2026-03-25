@@ -1,6 +1,7 @@
 
 import React from 'react';
 import './JessicaClaire5.css';
+import { formatExternalUrl, formatMailto, formatTel, getVisibleExtraLinks } from './socialUtils';
 
 const JessicaClaire5 = ({ data }) => {
     const {
@@ -11,6 +12,7 @@ const JessicaClaire5 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        extraLinks = [],
         experience = [],
         education = [],
         skills = { technical: [], soft: [] },
@@ -21,6 +23,7 @@ const JessicaClaire5 = ({ data }) => {
     const technicalSkills = skills?.technical || [];
     const softSkills = skills?.soft || [];
     const allSkills = [...technicalSkills, ...softSkills];
+    const visibleExtraLinks = getVisibleExtraLinks(extraLinks);
     // 2 columns implementation
     const halfSkill = Math.ceil(allSkills.length / 2);
     const skillsCol1 = allSkills.slice(0, halfSkill);
@@ -37,21 +40,33 @@ const JessicaClaire5 = ({ data }) => {
                         {phone && (
                             <span>
                                 <span className="sprtr">|</span>
-                                {phone}
+                                <a href={formatTel(phone)} target="_blank" rel="noopener noreferrer">{phone}</a>
                             </span>
                         )}
                         {email && (
                             <span>
                                 <span className="sprtr">|</span>
-                                {email}
+                                <a href={formatMailto(email)} target="_blank" rel="noopener noreferrer">{email}</a>
                             </span>
                         )}
                         {linkedin && (
                             <span>
                                 <span className="sprtr">|</span>
-                                <a href={linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                                <a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">LinkedIn</a>
                             </span>
                         )}
+                        {website && (
+                            <span>
+                                <span className="sprtr">|</span>
+                                <a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">Website</a>
+                            </span>
+                        )}
+                        {visibleExtraLinks.map((link, index) => (
+                            <span key={`${link.label}-${index}`}>
+                                <span className="sprtr">|</span>
+                                <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">{link.label}</a>
+                            </span>
+                        ))}
                     </div>
                 </div>
             </div>

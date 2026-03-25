@@ -1,4 +1,5 @@
 import React from "react";
+import { formatExternalUrl, formatMailto, formatTel } from "../../Templates/socialUtils";
 
 const CreativeTemplate = ({ formData }) => {
   const {
@@ -23,9 +24,9 @@ const CreativeTemplate = ({ formData }) => {
           {fullName || "Your Name"}
         </h1>
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-bold opacity-90 uppercase tracking-widest">
-          <span>{email}</span>
-          <span>{phone}</span>
-          <span className="truncate max-w-[200px]">{linkedin}</span>
+          <span><a href={formatMailto(email)} className="hover:underline">{email}</a></span>
+          <span><a href={formatTel(phone)} className="hover:underline">{phone}</a></span>
+          <span className="truncate max-w-[200px]"><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="hover:underline">{linkedin}</a></span>
           <span className="truncate max-w-[200px]">{address}</span>
         </div>
       </div>

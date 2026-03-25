@@ -1,6 +1,7 @@
 
 import React from 'react';
 import './JessicaClaire10.css';
+import { formatExternalUrl, formatMailto, formatTel, getVisibleExtraLinks } from './socialUtils';
 
 const JessicaClaire10 = ({ data }) => {
     const {
@@ -11,6 +12,7 @@ const JessicaClaire10 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        extraLinks = [],
         experience = [],
         education = [],
         skills = { technical: [], soft: [] },
@@ -21,6 +23,7 @@ const JessicaClaire10 = ({ data }) => {
     const technicalSkills = skills?.technical || [];
     const softSkills = skills?.soft || [];
     const allSkills = [...technicalSkills, ...softSkills];
+    const visibleExtraLinks = getVisibleExtraLinks(extraLinks);
 
     return (
         <div className="jessica-claire-10">
@@ -29,21 +32,27 @@ const JessicaClaire10 = ({ data }) => {
                 <div className="contact-info">
                     <span>{location}</span>
                     <span>|</span>
-                    <span>{phone}</span>
+                    <span><a href={formatTel(phone)} target="_blank" rel="noopener noreferrer">{phone}</a></span>
                     <span>|</span>
-                    <span>{email}</span>
+                    <span><a href={formatMailto(email)} target="_blank" rel="noopener noreferrer">{email}</a></span>
                     {linkedin && (
                         <>
                             <span>|</span>
-                            <a href={linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                            <a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">LinkedIn</a>
                         </>
                     )}
                     {website && (
                         <>
                             <span>|</span>
-                            <a href={website} target="_blank" rel="noopener noreferrer">Website</a>
+                            <a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">Website</a>
                         </>
                     )}
+                    {visibleExtraLinks.map((link, index) => (
+                        <React.Fragment key={`${link.label}-${index}`}>
+                            <span>|</span>
+                            <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">{link.label}</a>
+                        </React.Fragment>
+                    ))}
                 </div>
             </div>
 

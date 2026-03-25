@@ -1,6 +1,7 @@
 import React from 'react';
 import './JessicaClaire.css';
 import SocialLinks from "../CV/components/SocialLinks";
+import { formatMailto, formatTel } from './socialUtils';
 
 const JessicaClaire = ({ data }) => {
     const {
@@ -11,6 +12,7 @@ const JessicaClaire = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        extraLinks = [],
         education = [],
         experience = [],
         skills = [],
@@ -23,13 +25,12 @@ const JessicaClaire = ({ data }) => {
             <header className="header">
                 <h1 className="name">{fullName}</h1>
                 <div className="contact-info">
-                    <span>{email}</span>
-                    <span>{phone}</span>
+                    <span><a href={formatMailto(email)}>{email}</a></span>
+                    <span><a href={formatTel(phone)}>{phone}</a></span>
                     <span>{location}</span>
                 </div>
                 <SocialLinks 
-                    linkedin={linkedin}
-                    website={website}
+                    formData={{ linkedin, website, extraLinks }}
                 />
             </header>
             

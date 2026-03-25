@@ -1,4 +1,5 @@
 import React from "react";
+import { formatExternalUrl, getVisibleExtraLinks } from "../../Templates/socialUtils";
 
 const TwoColumnATS = ({ formData }) => {
   const {
@@ -17,6 +18,8 @@ const TwoColumnATS = ({ formData }) => {
     certifications,
   } = formData;
 
+  const visibleExtraLinks = getVisibleExtraLinks(formData?.extraLinks);
+
   return (
     <div className="w-full text-[11px] leading-relaxed text-gray-900 p-8 bg-white">
       {/* ================= HEADER ================= */}
@@ -32,15 +35,15 @@ const TwoColumnATS = ({ formData }) => {
           {location && <span>|</span>}
           {location && <span>{location}</span>}
           {linkedin && <span>|</span>}
-          {linkedin && <span>{linkedin}</span>}
+          {linkedin && <span><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a></span>}
           {github && <span>|</span>}
-          {github && <span>{github}</span>}
+          {github && <span><a href={formatExternalUrl(github)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{github}</a></span>}
           {website && <span>|</span>}
-          {website && <span>{website}</span>}
+          {website && <span><a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{website}</a></span>}
           {/* Extra Links */}
-          {formData?.extraLinks?.map((link, index) => (
+          {visibleExtraLinks.map((link, index) => (
             <span key={index}>|
-              <a href={link.url.startsWith("http") ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+              <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
                 {link.label}
               </a>
             </span>

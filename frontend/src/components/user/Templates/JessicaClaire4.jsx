@@ -1,6 +1,7 @@
 
 import React from 'react';
 import './JessicaClaire4.css';
+import { formatExternalUrl, formatMailto, formatTel, getVisibleExtraLinks } from './socialUtils';
 
 const JessicaClaire4 = ({ data }) => {
     const {
@@ -11,6 +12,7 @@ const JessicaClaire4 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        extraLinks = [],
         experience = [],
         education = [],
         skills = { technical: [], soft: [] },
@@ -21,6 +23,7 @@ const JessicaClaire4 = ({ data }) => {
     const technicalSkills = skills?.technical || [];
     const softSkills = skills?.soft || [];
     const allSkills = [...technicalSkills, ...softSkills];
+    const visibleExtraLinks = getVisibleExtraLinks(extraLinks);
 
     return (
         <div className="jessica-claire-4">
@@ -96,10 +99,17 @@ const JessicaClaire4 = ({ data }) => {
                     <div className="section cntcSec">
                         <div className="address">
                             {location && <div>{location}</div>}
-                            {phone && <div>{phone}</div>}
-                            {email && <div>{email}</div>}
-                            {linkedin && <div>{linkedin}</div>}
-                            {website && <div>{website}</div>}
+                            {phone && <div><a href={formatTel(phone)} target="_blank" rel="noopener noreferrer">{phone}</a></div>}
+                            {email && <div><a href={formatMailto(email)} target="_blank" rel="noopener noreferrer">{email}</a></div>}
+                            {linkedin && <div><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">{linkedin}</a></div>}
+                            {website && <div><a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">{website}</a></div>}
+                            {visibleExtraLinks.map((link, index) => (
+                                <div key={`${link.label}-${index}`}>
+                                    <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">
+                                        {link.label}: {link.url}
+                                    </a>
+                                </div>
+                            ))}
                         </div>
                     </div>
 

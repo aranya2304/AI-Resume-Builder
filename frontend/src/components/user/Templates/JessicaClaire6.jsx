@@ -1,6 +1,7 @@
 
 import React from 'react';
 import './JessicaClaire6.css';
+import { formatExternalUrl, formatMailto, formatTel, getVisibleExtraLinks } from './socialUtils';
 
 const JessicaClaire6 = ({ data }) => {
     const {
@@ -11,6 +12,7 @@ const JessicaClaire6 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        extraLinks = [],
         experience = [],
         education = [],
         skills = { technical: [], soft: [] },
@@ -24,6 +26,7 @@ const JessicaClaire6 = ({ data }) => {
     const technicalSkills = skills?.technical || [];
     const softSkills = skills?.soft || [];
     const allSkills = [...technicalSkills, ...softSkills];
+    const visibleExtraLinks = getVisibleExtraLinks(extraLinks);
 
     // 2 or 3 columns? HTML shows 3 columns structure (.padding-right 15px, width 50%?? Wait HTML skill has 2 sets of paddedline with width 50%, then a 3rd with width 30%? No. HTML shows 3 <ul> blocks in the example.)
     // Let's do 2 columns safe or 3 if space allows. The CSS says 50% width.
@@ -43,15 +46,20 @@ const JessicaClaire6 = ({ data }) => {
                 <div className="cntc-sec">
                     <div className="address">
                         <div className="phone-box">
-                            <span className="dispInBlk">{phone}</span>
+                            <span className="dispInBlk"><a href={formatTel(phone)} target="_blank" rel="noopener noreferrer">{phone}</a></span>
                         </div>
                         <div className="address-box">
                             <span>{location}</span>
                         </div>
                         <div className="email-box">
-                            <span>{email}</span>
-                            {linkedin && <div style={{ marginTop: '2px' }}><a href={linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a></div>}
-                            {website && <div style={{ marginTop: '2px' }}><a href={website} target="_blank" rel="noopener noreferrer">Website</a></div>}
+                            <span><a href={formatMailto(email)} target="_blank" rel="noopener noreferrer">{email}</a></span>
+                            {linkedin && <div style={{ marginTop: '2px' }}><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">LinkedIn</a></div>}
+                            {website && <div style={{ marginTop: '2px' }}><a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">Website</a></div>}
+                            {visibleExtraLinks.map((link, index) => (
+                                <div key={`${link.label}-${index}`} style={{ marginTop: '2px' }}>
+                                    <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">{link.label}</a>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

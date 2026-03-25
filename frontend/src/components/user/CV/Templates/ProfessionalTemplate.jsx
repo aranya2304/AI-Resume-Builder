@@ -1,4 +1,5 @@
 import React from "react";
+import { formatExternalUrl, getVisibleExtraLinks } from "../../Templates/socialUtils";
 
 
 const ProfessionalTemplate = ({ formData }) => {
@@ -17,6 +18,8 @@ const ProfessionalTemplate = ({ formData }) => {
     projects,
     certifications,
   } = formData;
+
+  const visibleExtraLinks = getVisibleExtraLinks(formData?.extraLinks);
 
 
   return (
@@ -77,13 +80,13 @@ const ProfessionalTemplate = ({ formData }) => {
           {location && <span>{location}</span>}
           {email && <span>• {email}</span>}
           {phone && <span>• {phone}</span>}
-          {linkedin && <span>• {linkedin}</span>}
-          {github && <span>• {github}</span>}
-          {website && <span>• {website}</span>}
+          {linkedin && <span>• <a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a></span>}
+          {github && <span>• <a href={formatExternalUrl(github)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{github}</a></span>}
+          {website && <span>• <a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{website}</a></span>}
           {/* Extra Links */}
-          {formData?.extraLinks?.map((link, index) => (
+          {visibleExtraLinks.map((link, index) => (
             <span key={index}>• 
-              <a href={link.url.startsWith("http") ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+              <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
                 {link.label}
               </a>
             </span>

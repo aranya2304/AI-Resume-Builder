@@ -1,4 +1,5 @@
 import React from "react";
+import { formatExternalUrl, formatMailto, formatTel } from "../../Templates/socialUtils";
 
 const CorporateTemplate = ({ formData }) => {
   const {
@@ -23,9 +24,9 @@ const CorporateTemplate = ({ formData }) => {
           <p className="text-sm font-bold text-gray-400 tracking-[0.2em] uppercase">{jobTitle || "Professional Title"}</p>
         </div>
         <div className="text-right text-xs space-y-1 font-medium text-gray-500">
-          <p>{email}</p>
-          <p>{phone}</p>
-          <p className="truncate max-w-[200px]">{linkedin}</p>
+          <p><a href={formatMailto(email)} className="hover:underline">{email}</a></p>
+          <p><a href={formatTel(phone)} className="hover:underline">{phone}</a></p>
+          <p className="truncate max-w-[200px]"><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="hover:underline">{linkedin}</a></p>
           <p className="whitespace-pre-line underline decoration-blue-100">{address}</p>
         </div>
       </div>

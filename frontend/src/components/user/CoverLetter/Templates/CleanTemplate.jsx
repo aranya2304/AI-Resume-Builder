@@ -1,4 +1,5 @@
 import React from "react";
+import { formatExternalUrl, formatMailto, formatTel } from "../../Templates/socialUtils";
 
 const CleanTemplate = ({ formData }) => {
   const {
@@ -20,11 +21,11 @@ const CleanTemplate = ({ formData }) => {
       <div className="w-full max-w-2xl mb-24 border-b border-stone-200 pb-12 flex flex-col items-center text-center">
         <h1 className="text-4xl font-extralight text-stone-900 uppercase tracking-[0.2em] mb-6">{fullName || "Your Name"}</h1>
         <div className="flex gap-8 text-[9px] font-bold uppercase tracking-[0.3em] text-stone-400">
-           <span>{email}</span>
+            <span><a href={formatMailto(email)} className="hover:underline">{email}</a></span>
            <span className="text-stone-200">•</span>
-           <span>{phone}</span>
+            <span><a href={formatTel(phone)} className="hover:underline">{phone}</a></span>
            <span className="text-stone-200">•</span>
-           <span>{linkedin}</span>
+            <span><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="hover:underline">{linkedin}</a></span>
         </div>
       </div>
 

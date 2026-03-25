@@ -1,4 +1,5 @@
 import React from "react";
+import { formatExternalUrl, formatMailto, formatTel } from "../../Templates/socialUtils";
 
 const TechTemplate = ({ formData }) => {
   const {
@@ -28,9 +29,9 @@ const TechTemplate = ({ formData }) => {
           {fullName || "DEV_NAME"}
         </h1>
         <div className="grid grid-cols-2 gap-4 text-[10px] opacity-60 max-w-md">
-          <div className="flex items-center gap-2"><span className="code-style">email:</span> {email}</div>
-          <div className="flex items-center gap-2"><span className="code-style">phone:</span> {phone}</div>
-          <div className="flex items-center gap-2 underline decoration-blue-500/20"><span className="code-style">link:</span> {linkedin}</div>
+          <div className="flex items-center gap-2"><span className="code-style">email:</span> <a href={formatMailto(email)} className="underline decoration-blue-500/20">{email}</a></div>
+          <div className="flex items-center gap-2"><span className="code-style">phone:</span> <a href={formatTel(phone)} className="underline decoration-blue-500/20">{phone}</a></div>
+          <div className="flex items-center gap-2 underline decoration-blue-500/20"><span className="code-style">link:</span> <a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">{linkedin}</a></div>
           <div className="flex items-center gap-2 italic"><span className="code-style">addr:</span> {address}</div>
         </div>
       </div>

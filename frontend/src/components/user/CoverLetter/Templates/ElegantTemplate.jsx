@@ -1,4 +1,5 @@
 import React from "react";
+import { formatExternalUrl, formatMailto, formatTel } from "../../Templates/socialUtils";
 
 const ElegantTemplate = ({ formData }) => {
   const {
@@ -22,9 +23,9 @@ const ElegantTemplate = ({ formData }) => {
       <header className="border-b-[3px] border-double border-stone-300 pb-12 mb-16 relative">
         <h1 className="text-5xl font-light tracking-widest text-stone-900 mb-6 text-center italic">{fullName || "your name"}</h1>
         <div className="flex justify-center gap-12 text-[10px] font-bold uppercase tracking-[0.3em] text-stone-400">
-           <span>{email}</span>
-           <span>{phone}</span>
-           <span className="truncate max-w-[150px]">{linkedin}</span>
+            <span><a href={formatMailto(email)} className="hover:underline">{email}</a></span>
+            <span><a href={formatTel(phone)} className="hover:underline">{phone}</a></span>
+            <span className="truncate max-w-[150px]"><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="hover:underline">{linkedin}</a></span>
         </div>
         <div className="text-center mt-3 text-[10px] text-stone-300 uppercase tracking-widest">{address}</div>
         <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-[#fffcf5] px-8 text-stone-300">
