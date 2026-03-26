@@ -8,6 +8,7 @@ import Subscription from "../Models/subscription.js";
 import ApiMetric from "../Models/ApiMetric.js";
 import Download from "../Models/Download.js";
 import { pool } from "../config/postgresdb.js";
+import crypto from "crypto";
 
 /* ================== USER DASHBOARD ================== */
 export const getDashboardData = async (req, res) => {
@@ -122,7 +123,16 @@ export const getUserName = async (req, res) => {
 /* ================== ADMIN: USERS ================== */
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}, { password: 0 });
+    const result = await pool.query(
+      "SELECT id, username, email, is_admin as \"isAdmin\", admin_request_status as \"adminRequestStatus\", is_active as \"isActive\", plan, last_login as \"lastLogin\", created_at as \"createdAt\", profile_views as \"profileViews\" FROM users"
+    );
+
+    // Ensure frontend gets Mongoose-compatible properties (specifically _id)
+    const users = result.rows.map(row => ({
+      ...row,
+      _id: row.id
+    }));
+
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: "Something went wrong", error: error.message });
@@ -337,15 +347,15 @@ export const changePassword = async (req, res) => {
     if (!currentPassword || !newPassword) return res.status(400).json({ message: "Both passwords are required" });
     if (newPassword.length < 8) return res.status(400).json({ message: "Password must be at least 8 characters" });
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const userResult = await pool.query("SELECT id, password FROM users WHERE id = $1", [userId]);
+    if (userResult.rowCount === 0) return res.status(404).json({ message: "User not found" });
+    const user = userResult.rows[0];
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) return res.status(401).json({ message: "Current password is incorrect" });
 
     const hashed = await bcrypt.hash(newPassword, 10);
-    user.password = hashed;
-    await user.save();
+    await pool.query("UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2", [hashed, userId]);
 
     res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
@@ -443,40 +453,49 @@ export const deleteUser = async (req, res) => {
 export const requestAdminAccess = async (req, res) => {
   try {
     const userId = req.userId;
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const userResult = await pool.query(
+      "SELECT id, username, email, is_admin, admin_request_status FROM users WHERE id = $1", 
+      [userId]
+    );
+    
+    if (userResult.rowCount === 0) return res.status(404).json({ message: "User not found" });
+    const user = userResult.rows[0];
 
-    if (user.isAdmin) {
+    if (user.is_admin) {
       return res.status(400).json({ message: "You are already an admin" });
     }
 
-    if (user.adminRequestStatus === 'pending') {
+    if (user.admin_request_status === 'pending') {
       return res.status(400).json({ message: "Admin request is already pending" });
     }
 
-    user.adminRequestStatus = 'pending';
-    await user.save();
+    await pool.query(
+      "UPDATE users SET admin_request_status = 'pending', updated_at = NOW() WHERE id = $1", 
+      [userId]
+    );
 
     // 🔔 USER NOTIFICATION (Self acknowledgement)
-    await Notification.create({
-      type: "ADMIN_REQUEST_USER",
-      message: "Your request for admin access has been submitted",
-      userId: user._id,
-      actor: "system"
-    });
+    await pool.query(
+      `INSERT INTO notifications (id, type, message, user_id, actor, is_read, created_at, updated_at) 
+       VALUES ($1, $2, $3, $4, $5, false, NOW(), NOW())`,
+      [crypto.randomUUID(), "ADMIN_REQUEST_USER", "Your request for admin access has been submitted", userId, "system"]
+    );
 
     // 🔔 ADMIN NOTIFICATION
-    const adminUser = await User.findOne({ isAdmin: true });
-    if (adminUser) {
-      await Notification.create({
-        type: "ADMIN_REQUEST",
-        message: `${user.username || user.email} has requested for admin access`,
-        userId: adminUser._id,
-        actor: "user"
-      });
+    const adminUserResult = await pool.query("SELECT id FROM users WHERE is_admin = true LIMIT 1");
+    if (adminUserResult.rowCount > 0) {
+      const adminUserId = adminUserResult.rows[0].id;
+      await pool.query(
+        `INSERT INTO notifications (id, type, message, user_id, actor, is_read, created_at, updated_at) 
+         VALUES ($1, $2, $3, $4, $5, false, NOW(), NOW())`,
+        [crypto.randomUUID(), "ADMIN_REQUEST", `${user.username || user.email} has requested for admin access`, adminUserId, "user"]
+      );
     }
 
-    res.status(200).json({ message: "Admin request submitted successfully", user });
+    res.status(200).json({ 
+      message: "Admin request submitted successfully", 
+      user: { ...user, adminRequestStatus: 'pending' } 
+    });
   } catch (error) {
     console.error("Request admin error DETAILED:", error.message, error.stack);
     import('fs').then(fs => fs.writeFileSync('error_log.txt', error.stack));

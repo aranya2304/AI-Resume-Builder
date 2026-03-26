@@ -10,7 +10,8 @@ dotenv.config();
 
 export const pool = new Pool({
     connectionString : process.env.POSTGRESQL_URI,
-    // Add additional timeout safety
+    max: 10, // Limit active connections to prevent Supabase MaxClientsInSessionMode error
+    idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
     connectionTimeoutMillis: 5000,
 });
 
