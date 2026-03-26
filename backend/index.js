@@ -31,7 +31,6 @@ import adminRouter from "./routers/admin.router.js";
 
 // Config
 import connectDB from "./config/db.js";
-import User from "./Models/User.js";
 import bcrypt from "bcryptjs";
 
 import apiTracker from "./middlewares/apiTracker.js";
@@ -103,17 +102,13 @@ const bootstrapAdmin = async () => {
       return;
     }
 
-    const adminExists = await User.findOne({ email: adminEmail });
-    if (!adminExists) {
+    const adminRes = await pool.query('SELECT id FROM users WHERE email = $1', [adminEmail]);
+    if (adminRes.rowCount === 0) {
       const hashedPassword = await bcrypt.hash(adminPassword, 10);
-      const newAdmin = new User({
-        username: "Admin",
-        email: adminEmail,
-        password: hashedPassword,
-        isAdmin: true,
-        isActive: true,
-      });
-      await newAdmin.save();
+      await pool.query(`
+        INSERT INTO users (id, username, email, password, is_admin, is_active, created_at, updated_at)
+        VALUES (gen_random_uuid(), $1, $2, $3, true, true, NOW(), NOW())
+      `, ["Admin", adminEmail, hashedPassword]);
       console.log(`✅ Admin user created: ${adminEmail}`);
     }
   } catch (error) {

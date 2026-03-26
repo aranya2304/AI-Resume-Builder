@@ -45,7 +45,7 @@ export const getDashboardData = async (req, res) => {
 
     // ATS Scores logic
     const atsResult = await pool.query(
-        "SELECT score FROM ats_results WHERE user_id = $1 ORDER BY created_at DESC",
+        "SELECT score FROM ats_scores WHERE user_id = $1 ORDER BY created_at DESC",
         [userId]
     );
     const allAtsScans = atsResult.rows;

@@ -164,8 +164,8 @@ export const forgotPassword = async (req, res) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    const user = await User.findOne({ email });
-    if (!user) {
+    const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (userResult.rowCount === 0) {
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -200,10 +200,11 @@ export const changePassword = async (req, res) => {
       return res.status(400).json({ message: "New password must be different from old password" });
     }
 
-    const user = await User.findById(userId);
-    if (!user) {
+    const userResult = await pool.query('SELECT password FROM users WHERE id = $1', [userId]);
+    if (userResult.rowCount === 0) {
       return res.status(404).json({ message: "User not found" });
     }
+    const user = userResult.rows[0];
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
@@ -211,9 +212,7 @@ export const changePassword = async (req, res) => {
     }
 
     const hashedPass = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPass;
-    await user.save();
-
+    await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPass, userId]);
 
     res.clearCookie("token");
 

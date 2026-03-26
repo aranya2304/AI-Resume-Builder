@@ -1,7 +1,3 @@
-import mongoose from "mongoose";
-import Resume from "../Models/resume.js";
-import AtsScans from "../Models/atsScan.js";
-import Download from "../Models/Download.js";
 import { pool } from "../config/postgresdb.js";
 
 // Helper for relative time if we need it, but frontend does it. We will just supply the raw Date objects.
@@ -12,7 +8,7 @@ export const getDashboardSummary = async (req, res) => {
 
         // 1. Calculate Average ATS Score
         const atsResult = await pool.query(
-            "SELECT score AS \"overallScore\" FROM ats_results WHERE user_id = $1 ORDER BY created_at DESC",
+            "SELECT score AS \"overallScore\" FROM ats_scores WHERE user_id = $1 ORDER BY created_at DESC",
             [userId]
         );
         const allAtsScans = atsResult.rows;
@@ -103,9 +99,9 @@ export const getDashboardSummary = async (req, res) => {
 
         // - Add recent ATS scans
         const recentScansResult = await pool.query(
-            `SELECT a.id, a.created_at, a.score, coalesce(r.title, 'Resume Profile') as "resumeTitle", r.id as resume_id 
-             FROM ats_results a 
-             LEFT JOIN resumes r ON a.resume_id = r.id 
+            `SELECT a.id, a.created_at, a.score, coalesce(r.title, 'Resume Profile') as "resumeTitle", r.id as cv_id 
+             FROM ats_scores a 
+             LEFT JOIN resumes r ON a.cv_id = r.id 
              WHERE a.user_id = $1 
              ORDER BY a.created_at DESC LIMIT 10`,
             [userId]
@@ -118,7 +114,7 @@ export const getDashboardSummary = async (req, res) => {
                 label: `ATS Scan completed (${s.score || 0}%)`,
                 timestamp: new Date(s.created_at),
                 docTitle: s.resumeTitle,
-                docId: s.resume_id || null,
+                docId: s.cv_id || null,
             });
         });
 
