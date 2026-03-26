@@ -1,13 +1,5 @@
-import User from "../Models/User.js";
-import Payment from "../Models/payment.js";
-import Subscription from "../Models/subscription.js";
-import Resume from "../Models/resume.js";
-import ApiMetric from "../Models/ApiMetric.js";
-import Plan from "../Models/Plan.js";
-import Notification from "../Models/notification.js"
-import Download from "../Models/Download.js";
 import { pool } from "../config/postgresdb.js";
-/* ================== ADMIN DASHBOARD ================== */
+/* ================== ADMIN DASHBOARD ================== */ 
 
 export const getAdminDashboardStats = async (req, res) => {
   try {
@@ -232,39 +224,95 @@ export const getAnalyticsStats = async (req, res) => {
     const last30Days = new Date();
     last30Days.setDate(last30Days.getDate() - 30);
 
-    const newUsersLast30Days = await User.countDocuments({
-      createdAt: { $gte: last30Days },
-    });
-
     const last7Days = new Date();
     last7Days.setDate(last7Days.getDate() - 7);
-    const activeUsersLast7Days = await User.countDocuments({
-      lastLogin: { $gte: last7Days },
-      isAdmin: false,
-    });
 
-    // ---------- DELETED USERS ----------
-    const deletedUsersCount = await Notification.countDocuments({
-      type: "USER_DELETED",
-    });
+    const lastSixMonths = new Date();
+    lastSixMonths.setMonth(lastSixMonths.getMonth() - 5);
+    lastSixMonths.setDate(1);
+    lastSixMonths.setHours(0, 0, 0, 0);
+
+    const [
+      newUsersResult,
+      activeUsersResult,
+      deletedUsersResult,
+      availablePlansResult,
+      subscriptionDistributionResult,
+      apiStatsResult,
+      userGrowthResult,
+      revenueResult,
+      resumeTemplatesResult,
+      resumeDownloadsResult,
+      cvDownloadsResult
+    ] = await Promise.all([
+      pool.query("SELECT COUNT(*)::int AS count FROM users WHERE created_at >= $1", [last30Days]),
+      pool.query("SELECT COUNT(*)::int AS count FROM users WHERE last_login >= $1 AND is_admin = false", [last7Days]),
+      pool.query("SELECT COUNT(*)::int AS count FROM notifications WHERE type = 'USER_DELETED'"),
+      pool.query("SELECT name FROM plans"),
+      pool.query("SELECT plan AS id, COUNT(*)::int AS count FROM users WHERE is_admin = false GROUP BY 1"),
+      pool.query(`
+        SELECT 
+          CASE WHEN status_code < 400 THEN 'success' ELSE 'failure' END AS metric,
+          COUNT(*)::int AS count,
+          AVG(response_time)::float AS avg_response
+        FROM api_metrics
+        WHERE created_at >= $1
+        GROUP BY 1
+      `, [last30Days]),
+      pool.query(`
+        SELECT 
+          EXTRACT(YEAR FROM created_at)::int AS year,
+          EXTRACT(MONTH FROM created_at)::int AS month,
+          COUNT(*)::int AS count
+        FROM users
+        WHERE created_at >= $1
+        GROUP BY 1, 2
+      `, [lastSixMonths]),
+      pool.query(`
+        SELECT 
+          EXTRACT(YEAR FROM created_at)::int AS year,
+          EXTRACT(MONTH FROM created_at)::int AS month,
+          SUM(amount)::float AS revenue
+        FROM payments
+        WHERE status = 'success' AND created_at >= $1
+        GROUP BY 1, 2
+      `, [lastSixMonths]),
+      pool.query(`
+        SELECT 
+          data->>'templateId' AS id,
+          COUNT(*)::int AS count
+        FROM resumes
+        WHERE data->>'templateId' IS NOT NULL
+        GROUP BY 1
+        ORDER BY count DESC
+      `),
+      pool.query(`
+        SELECT 
+          template AS id,
+          COUNT(*)::int AS count
+        FROM downloads
+        WHERE type = 'resume' AND action = 'download' AND template IS NOT NULL AND template != ''
+        GROUP BY 1
+        ORDER BY count DESC
+      `),
+      pool.query(`
+        SELECT 
+          template AS id,
+          COUNT(*)::int AS count
+        FROM downloads
+        WHERE type = 'cv' AND action = 'download' AND template IS NOT NULL AND template != ''
+        GROUP BY 1
+        ORDER BY count DESC
+      `)
+    ]);
+
+    const newUsersLast30Days = newUsersResult.rows[0]?.count || 0;
+    const activeUsersLast7Days = activeUsersResult.rows[0]?.count || 0;
+    const deletedUsersCount = deletedUsersResult.rows[0]?.count || 0;
 
     // ---------- SUBSCRIPTION BREAKDOWN ----------
-    const [availablePlans, subscriptionDistribution] = await Promise.all([
-      Plan.find({}, { name: 1, _id: 0 }).lean(),
-      User.aggregate([
-        {
-          $match: {
-            isAdmin: false,
-          },
-        },
-        {
-          $group: {
-            _id: "$plan",
-            count: { $sum: 1 },
-          },
-        },
-      ]),
-    ]);
+    const availablePlans = availablePlansResult.rows;
+    const subscriptionDistribution = subscriptionDistributionResult.rows;
 
     const toTitleCase = (value = "") =>
       String(value)
@@ -293,7 +341,6 @@ export const getAnalyticsStats = async (req, res) => {
         return canonicalPlanByKey.get(key);
       }
 
-      // Keep legacy spellings aligned to one canonical tier.
       if (["lifetime", "life time"].includes(key)) {
         return canonicalPlanByKey.get("ultra pro") || "Ultra Pro";
       }
@@ -303,7 +350,7 @@ export const getAnalyticsStats = async (req, res) => {
 
     const groupedPlanCounts = new Map();
     subscriptionDistribution.forEach((item) => {
-      const planName = normalizePlanName(item._id);
+      const planName = normalizePlanName(item.id);
       groupedPlanCounts.set(planName, (groupedPlanCounts.get(planName) || 0) + item.count);
     });
 
@@ -333,28 +380,17 @@ export const getAnalyticsStats = async (req, res) => {
     );
 
     // ---------- API PERFORMANCE ----------
-    const apiStats = await ApiMetric.aggregate([
-      { $match: { createdAt: { $gte: last30Days } } },
-      {
-        $group: {
-          _id: { $cond: [{ $lt: ["$statusCode", 400] }, "success", "failure"] },
-          count: { $sum: 1 },
-          avgResponse: { $avg: "$responseTime" },
-        },
-      },
-    ]);
-
     let apiSuccessCount = 0;
     let apiFailureCount = 0;
     let totalRespTime = 0;
     let callsForAvg = 0;
 
-    apiStats.forEach(stat => {
-      if (stat._id === "success") apiSuccessCount = stat.count;
+    apiStatsResult.rows.forEach(stat => {
+      if (stat.metric === "success") apiSuccessCount = stat.count;
       else apiFailureCount = stat.count;
 
-      if (stat.avgResponse) {
-        totalRespTime += (stat.avgResponse * stat.count);
+      if (stat.avg_response) {
+        totalRespTime += (stat.avg_response * stat.count);
         callsForAvg += stat.count;
       }
     });
@@ -370,122 +406,27 @@ export const getAnalyticsStats = async (req, res) => {
       const d = new Date();
       d.setMonth(d.getMonth() - i);
       const year = d.getFullYear();
-      const month = d.getMonth() + 1; // 1-indexed
+      const month = d.getMonth() + 1;
       const monthName = d.toLocaleString("default", { month: "short" });
 
       trendData.push({
         year,
-        month: month,
+        month,
         monthName,
         users: 0,
         revenue: 0
       });
     }
 
-    // Fill User Growth
-    const userGrowthAgg = await User.aggregate([
-      {
-        $group: {
-          _id: {
-            year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" },
-          },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    // Fill Revenue
-    const revenueByMonth = await Payment.aggregate([
-      { $match: { status: "success" } },
-      {
-        $group: {
-          _id: {
-            year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" },
-          },
-          revenue: { $sum: "$amount" },
-        },
-      },
-    ]);
-
     trendData.forEach(tick => {
-      const growthMatch = userGrowthAgg.find(g => g._id.year === tick.year && g._id.month === tick.month);
-      const revenueMatch = revenueByMonth.find(r => r._id.year === tick.year && r._id.month === tick.month);
+      const growthMatch = userGrowthResult.rows.find(g => Number(g.year) === tick.year && Number(g.month) === tick.month);
+      const revenueMatch = revenueResult.rows.find(r => Number(r.year) === tick.year && Number(r.month) === tick.month);
 
-      if (growthMatch) tick.users = growthMatch.count;
-      if (revenueMatch) tick.revenue = revenueMatch.revenue;
+      if (growthMatch) tick.users = Number(growthMatch.count || 0);
+      if (revenueMatch) tick.revenue = Number(revenueMatch.revenue || 0);
     });
 
-    // ---------- MOST USED TEMPLATES (Resume + CV templates) ----------
-    const mostUsedResumeTemplatesAgg = await Resume.aggregate([
-      {
-        $match: { templateId: { $exists: true, $ne: null } }
-      },
-      {
-        $group: {
-          _id: "$templateId",
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $addFields: {
-          tId: {
-            $convert: {
-              input: "$_id",
-              to: "objectId",
-              onError: "$_id",
-              onNull: "$_id"
-            }
-          }
-        }
-      },
-      {
-        $lookup: {
-          from: "templates",
-          localField: "tId",
-          foreignField: "_id",
-          as: "templateDetails",
-        },
-      },
-      { $unwind: { path: "$templateDetails", preserveNullAndEmptyArrays: true } },
-      { $sort: { count: -1 } },
-    ]);
-
-    const mostUsedResumeDownloadTemplatesAgg = await Download.aggregate([
-      {
-        $match: {
-          type: "resume",
-          action: "download",
-          template: { $exists: true, $ne: null, $ne: "" },
-        },
-      },
-      {
-        $group: {
-          _id: "$template",
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { count: -1 } },
-    ]);
-
-    const mostUsedCvTemplatesAgg = await Download.aggregate([
-      {
-        $match: {
-          type: "cv",
-          action: "download",
-          template: { $exists: true, $ne: null, $ne: "" },
-        },
-      },
-      {
-        $group: {
-          _id: "$template",
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { count: -1 } },
-    ]);
-
+    // ---------- MOST USED TEMPLATES ----------
     const toReadableTemplateName = (value) => {
       if (!value) return "Standard";
       const str = String(value);
@@ -521,7 +462,6 @@ export const getAnalyticsStats = async (req, res) => {
 
       if (canonicalNames[str]) return canonicalNames[str];
       if (str.length > 40) return `ID: ${str.substring(0, 8)}...`;
-      // Convert template ids like "jessica-claire" into "Jessica Claire".
       return str
         .replace(/[_-]+/g, " ")
         .replace(/\s+/g, " ")
@@ -532,8 +472,8 @@ export const getAnalyticsStats = async (req, res) => {
     const resumeTemplateCountMap = new Map();
     const cvTemplateCountMap = new Map();
 
-    mostUsedResumeTemplatesAgg.forEach((item) => {
-      let name = item.templateDetails?.name;
+    resumeTemplatesResult.rows.forEach((item) => {
+      let name = item.name;
       if (!name) {
         const hardcodedNames = {
           professional: "Professional",
@@ -552,30 +492,25 @@ export const getAnalyticsStats = async (req, res) => {
           eclipse1: "Eclipse Alt",
           harbor: "Harbor"
         };
-        const rawId = typeof item._id === "string" ? item._id : String(item._id);
+        const rawId = String(item.id);
         name = hardcodedNames[rawId] || toReadableTemplateName(rawId);
       }
-
       const key = name || "Standard";
       resumeTemplateCountMap.set(key, (resumeTemplateCountMap.get(key) || 0) + item.count);
     });
 
-    mostUsedResumeDownloadTemplatesAgg.forEach((item) => {
-      const key = toReadableTemplateName(item._id);
+    resumeDownloadsResult.rows.forEach((item) => {
+      const key = toReadableTemplateName(item.id);
       resumeTemplateCountMap.set(key, (resumeTemplateCountMap.get(key) || 0) + item.count);
     });
 
-    mostUsedCvTemplatesAgg.forEach((item) => {
-      const key = toReadableTemplateName(item._id);
+    cvDownloadsResult.rows.forEach((item) => {
+      const key = toReadableTemplateName(item.id);
       cvTemplateCountMap.set(key, (cvTemplateCountMap.get(key) || 0) + item.count);
     });
 
     const buildTopTemplates = (countMap) => {
-      const total = Array.from(countMap.values()).reduce(
-        (sum, count) => sum + count,
-        0
-      );
-
+      const total = Array.from(countMap.values()).reduce((sum, count) => sum + count, 0);
       return Array.from(countMap.entries())
         .map(([templateId, count]) => ({
           templateId,
@@ -590,26 +525,15 @@ export const getAnalyticsStats = async (req, res) => {
     const mostUsedCvTemplates = buildTopTemplates(cvTemplateCountMap);
 
     const combinedTemplateCountMap = new Map();
-    Array.from(resumeTemplateCountMap.entries()).forEach(([key, count]) => {
-      combinedTemplateCountMap.set(key, (combinedTemplateCountMap.get(key) || 0) + count);
-    });
-    Array.from(cvTemplateCountMap.entries()).forEach(([key, count]) => {
-      combinedTemplateCountMap.set(key, (combinedTemplateCountMap.get(key) || 0) + count);
-    });
+    resumeTemplateCountMap.forEach((count, key) => combinedTemplateCountMap.set(key, (combinedTemplateCountMap.get(key) || 0) + count));
+    cvTemplateCountMap.forEach((count, key) => combinedTemplateCountMap.set(key, (combinedTemplateCountMap.get(key) || 0) + count));
 
-    const totalTemplateUsage = Array.from(combinedTemplateCountMap.values()).reduce(
-      (sum, count) => sum + count,
-      0
-    );
-
+    const totalTemplateUsage = Array.from(combinedTemplateCountMap.values()).reduce((sum, count) => sum + count, 0);
     const mostUsedTemplates = Array.from(combinedTemplateCountMap.entries())
       .map(([templateId, count]) => ({
         templateId,
         count,
-        percentage:
-          totalTemplateUsage > 0
-            ? Math.round((count / totalTemplateUsage) * 100)
-            : 0,
+        percentage: totalTemplateUsage > 0 ? Math.round((count / totalTemplateUsage) * 100) : 0,
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
@@ -620,14 +544,13 @@ export const getAnalyticsStats = async (req, res) => {
       revenue: item.revenue
     }));
 
-    // ---------- SYSTEM UPTIME ----------
     const baseUptime = 99.95;
     const uptimeDeduction = (100 - parseFloat(apiSuccessRate)) * 0.01;
     const systemUptime = Math.max(99.90, baseUptime - uptimeDeduction).toFixed(2);
 
     res.status(200).json({
       userGrowth: {
-        count: newUsersLast30Days,
+        count: Number(newUsersLast30Days),
         note: "New users in last 30 days",
       },
       conversions: {
@@ -635,11 +558,11 @@ export const getAnalyticsStats = async (req, res) => {
         note: "Total paid subscriptions",
       },
       activeUsers: {
-        count: activeUsersLast7Days,
+        count: Number(activeUsersLast7Days),
         note: "Active last 7 days",
       },
       deletedUsers: {
-        count: deletedUsersCount,
+        count: Number(deletedUsersCount),
         note: "Total deleted accounts",
       },
       mostUsedResumeTemplates,
@@ -651,7 +574,7 @@ export const getAnalyticsStats = async (req, res) => {
         apiSuccessRate: `${apiSuccessRate}%`,
         apiFailureRate: `${apiFailureRate}%`,
         avgResponseTime: `${avgResponseTime}ms`,
-        totalApiCalls,
+        totalApiCalls: Number(totalApiCalls),
         systemUptime: `${systemUptime}%`,
       },
     });
@@ -660,5 +583,6 @@ export const getAnalyticsStats = async (req, res) => {
     res.status(500).json({ message: "Analytics fetch failed", error: error.message });
   }
 };
+
 
 
