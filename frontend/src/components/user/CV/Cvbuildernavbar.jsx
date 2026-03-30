@@ -26,6 +26,7 @@ const CVBuilderTopBar = ({
   extraButtons = null,
   showReset = false,
   onReset,
+  resetLabel = "Create New Resume",
 }) => {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [localTitle, setLocalTitle] = useState(title ?? "");
@@ -164,7 +165,7 @@ const CVBuilderTopBar = ({
             className="flex items-center gap-2 text-white bg-emerald-600 rounded-lg text-sm transition-all duration-200 hover:bg-emerald-700 py-2 px-3 sm:px-5 whitespace-nowrap"
           >
             <Plus size={18} />
-            <span className="hidden sm:inline">Create New Resume</span>
+            <span className="hidden sm:inline">{resetLabel}</span>
           </button>
         )}
 
