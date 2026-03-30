@@ -152,6 +152,32 @@ import {
 } from "../service/FileStorage.service.js";
 
 /* =====================================================
+   HELPER: Flatten JSON data to text
+===================================================== */
+const flattenResumeData = (data) => {
+  let parts = [];
+  try {
+    if (data.personalInfo) parts.push(Object.values(data.personalInfo).filter(Boolean).join(" "));
+    if (data.summary) parts.push(typeof data.summary === 'string' ? data.summary : "");
+    if (data.experience && Array.isArray(data.experience)) {
+      data.experience.forEach(e => parts.push(Object.values(e).filter(Boolean).join(" ")));
+    }
+    if (data.education && Array.isArray(data.education)) {
+      data.education.forEach(e => parts.push(Object.values(e).filter(Boolean).join(" ")));
+    }
+    if (data.skills && Array.isArray(data.skills)) {
+      data.skills.forEach(s => parts.push(s.name || s));
+    }
+    if (data.projects && Array.isArray(data.projects)) {
+      data.projects.forEach(p => parts.push(Object.values(p).filter(Boolean).join(" ")));
+    }
+  } catch (e) {
+    console.error("Error flattening resume data: ", e);
+  }
+  return parts.join(" ");
+};
+
+/* =====================================================
    SAVE NORMAL RESUME (Manual Save)
    Saves a resume document to PostgreSQL
 ===================================================== */
@@ -164,14 +190,74 @@ export const saveResume = async (req, res) => {
     const dataWithoutUser = { ...data };
     delete dataWithoutUser.user;
 
-    await pool.query(
-      `INSERT INTO resumes (user_id, data, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())`, 
+    const result = await pool.query(
+      `INSERT INTO resumes (user_id, data, created_at, updated_at) VALUES ($1, $2, NOW(), NOW()) RETURNING id`, 
       [userId, JSON.stringify(dataWithoutUser)]
     );
+    const cvId = result.rows[0].id;
+
+    // --- Automatic ATS Parsing ---
+    try {
+      const flattenedText = flattenResumeData(dataWithoutUser);
+      const extractedData = Object.keys(dataWithoutUser).length > 0 ? extractResumeData(flattenedText) : {};
+      
+      const analysis = analyzeATSCompatibility(flattenedText, extractedData, "json");
+      const misspelledWords = await getMisspelledWords(flattenedText);
+      analysis.misspelledWords = misspelledWords;
+      const passes = passesATSThreshold(analysis.overallScore);
+      const recommendations = generateRecommendations(analysis);
+
+      if (analysis.sectionScores && Array.isArray(analysis.sectionScores)) {
+        const totalEarned = analysis.sectionScores.reduce(
+          (sum, s) => sum + (typeof s.score === 'number' ? s.score : 0),
+          0
+        );
+        const totalPossible = analysis.sectionScores.reduce(
+          (sum, s) => sum + (typeof s.maxScore === 'number' ? s.maxScore : 0),
+          0
+        );
+        analysis.overallScore = totalPossible > 0 
+          ? Math.round((totalEarned / totalPossible) * 100) 
+          : 0;
+      }
+
+      const scanData = {
+        filename: "web-builder-resume",
+        originalName: dataWithoutUser.personalInfo?.firstName || dataWithoutUser.title || "Resume",
+        filePath: "",
+        fileSize: 0,
+        fileType: "application/json",
+        sectionScores: analysis.sectionScores,
+        matchedKeywords: analysis.matchedKeywords,
+        missingKeywords: analysis.missingKeywords,
+        suggestions: analysis.suggestions,
+        extractedText: flattenedText,
+        extractedData: extractedData,
+        passThreshold: passes,
+        metrics: analysis.metrics,
+        misspelledWords: analysis.misspelledWords
+      };
+
+      await pool.query(`
+        INSERT INTO ats_scores (user_id, cv_id, template_id, job_title, score, feedback, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      `, [
+        userId, 
+        cvId, 
+        null, 
+        dataWithoutUser.personalInfo?.jobTitle || "Web Application Resume", 
+        analysis.overallScore, 
+        JSON.stringify(scanData)
+      ]);
+      console.log("Automatic ATS score generated and saved via Web Builder.");
+    } catch (atsError) {
+      console.error("Failed to compute ATS Score in background:", atsError);
+    }
 
     res.json({
       success: true,
       message: "Resume saved to database",
+      cvId: cvId
     });
   } catch (error) {
     res.status(500).json({

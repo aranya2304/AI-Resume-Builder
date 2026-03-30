@@ -46,20 +46,17 @@ export const getDashboardData = async (req, res) => {
 
     // ATS Scores logic
     const atsResult = await pool.query(
-        "SELECT score FROM ats_scores WHERE user_id = $1 ORDER BY created_at DESC",
+        "SELECT score FROM ats_scores WHERE user_id = $1 ORDER BY created_at DESC LIMIT 2",
         [userId]
     );
     const allAtsScans = atsResult.rows;
 
-    let avgAtsScore = 0;
-    if (allAtsScans.length > 0) {
-      const sum = allAtsScans.reduce((s, scan) => s + (scan.score || 0), 0);
-      avgAtsScore = Math.round(sum / allAtsScans.length);
-    }
-
     const latestAts = allAtsScans[0]?.score || 0;
     const previousAts = allAtsScans[1]?.score || latestAts;
     const atsDelta = latestAts - previousAts;
+
+    // Use latest ATS score as the primary metric to ensure consistency with ATS Checker
+    let avgAtsScore = latestAts;
 
     const recentResumesResult = await pool.query(
       "SELECT id, title, created_at FROM resumes WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5",

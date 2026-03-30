@@ -6,17 +6,13 @@ export const getDashboardSummary = async (req, res) => {
     try {
         const userId = req.userId;
 
-        // 1. Calculate Average ATS Score
+        // 1. Calculate Average ATS Score (Now using Latest for consistency)
         const atsResult = await pool.query(
-            "SELECT score AS \"overallScore\" FROM ats_scores WHERE user_id = $1 ORDER BY created_at DESC",
+            "SELECT score AS \"overallScore\" FROM ats_scores WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1",
             [userId]
         );
         const allAtsScans = atsResult.rows;
-        let avgAtsScore = 0;
-        if (allAtsScans.length > 0) {
-            const sum = allAtsScans.reduce((s, scan) => s + (scan.overallScore || 0), 0);
-            avgAtsScore = Math.round(sum / allAtsScans.length);
-        }
+        let avgAtsScore = allAtsScans.length > 0 ? allAtsScans[0].overallScore : 0;
 
         // 2. Calculate Total Downloads
         const dlCountResult = await pool.query(
