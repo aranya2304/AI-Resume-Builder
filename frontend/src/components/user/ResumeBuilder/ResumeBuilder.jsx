@@ -137,6 +137,7 @@ const ResumeBuilder = () => {
   const [isAiMode, setIsAiMode] = useState(false);
   const [documentTitle, setDocumentTitle] = useState("");
   const [showMobilePreview, setShowMobilePreview] = useState(false);
+  const [parsingConfidence, setParsingConfidence] = useState(null);
 
   // Check if form has data to show the reset (Create New Resume) button
   const hasData = JSON.stringify(formData) !== JSON.stringify(emptyData);
@@ -483,6 +484,9 @@ const ResumeBuilder = () => {
         alert("Failed to parse resume.");
         return;
       }
+
+      const confidence = res.data?.data?.parsingConfidence;
+      setParsingConfidence(confidence);
 
       // Auto-fill builder form - use correct field names from backend
       setFormData((prev) => ({
@@ -881,6 +885,7 @@ const ResumeBuilder = () => {
         onToggleAiMode={() => setIsAiMode((v) => !v)}
         showReset={hasData}
         onReset={handleResetResume}
+        parsingConfidence={parsingConfidence}
       />
 
       <div className="p-2.5 overflow-hidden">

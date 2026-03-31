@@ -6,7 +6,8 @@ import {
   generateCoverLetterAI,
   refineExperienceDescription,
   refineProjectDescription,
-  generateJobRecommendationsAI
+  generateJobRecommendationsAI,
+  extractResumeData as extractResumeDataAI
 } from "../ai/aiService.js";
 
 // Resume Parsing Services
@@ -489,7 +490,39 @@ export const uploadAndAnalyzeResume = async (req, res) => {
     }
 
     // Extract structured data
-    const extractedData = extractResumeData(resumeText);
+    let extractedData = extractResumeData(resumeText);
+    let isAIFallbackUsed = false;
+    let parsingConfidence = 'High';
+
+    // AI Fallback if the parser returns unusually empty results
+    const hasLittleData = 
+      extractedData.experience.length === 0 && 
+      extractedData.education.length === 0 && 
+      extractedData.skills.technical.length === 0;
+
+    if (hasLittleData && resumeText.length > 50) {
+      console.log("⚠️ Regex parser returned empty results. Falling back to AI extraction...");
+      try {
+        const aiData = await extractResumeDataAI(resumeText);
+        // Merge AI data over existing data (prefer AI if it found things)
+        extractedData = { ...extractedData, ...aiData };
+        isAIFallbackUsed = true;
+      } catch (err) {
+        console.error("AI Fallback failed:", err);
+      }
+    }
+
+    // Determine parsing confidence
+    let parsedSections = 0;
+    if (extractedData.experience?.length > 0) parsedSections++;
+    if (extractedData.education?.length > 0) parsedSections++;
+    if (extractedData.skills?.technical?.length > 0 || extractedData.skills?.soft?.length > 0) parsedSections++;
+    if (extractedData.projects?.length > 0) parsedSections++;
+    if (extractedData.summary?.length > 10) parsedSections++;
+
+    if (parsedSections <= 1) parsingConfidence = 'Low';
+    else if (parsedSections <= 3) parsingConfidence = 'Medium';
+    if (isAIFallbackUsed) parsingConfidence = 'High (AI Assisted)';
 
     // ATS analysis
     const analysis = analyzeATSCompatibility(resumeText, extractedData);
@@ -556,6 +589,7 @@ if (!jobTitle) {
       suggestions: analysis.suggestions,
       extractedText: resumeText,
       extractedData: extractedData,
+      parsingConfidence: parsingConfidence,
       passThreshold: passes,
       metrics: analysis.metrics,
       misspelledWords: analysis.misspelledWords
@@ -591,6 +625,7 @@ if (!jobTitle) {
         recommendations,
         passThreshold: passes,
         extractedData,
+        parsingConfidence,
         metrics: analysis.metrics,
         text: resumeText,
         misspelledWords: analysis.misspelledWords,

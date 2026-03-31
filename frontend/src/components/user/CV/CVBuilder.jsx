@@ -839,7 +839,7 @@ const CVBuilder = () => {
 
               if (!matched && currentExp && trimmedLine.length > 30) {
                 // Add as description if it looks like a responsibility/achievement
-                if (trimmedLine.match(/^•|^-|\*|^\d+\.|^[A-Z][a-z]/)) {
+                if (trimmedLine.match(/^[•\-*·\u2022\u2023\u25E6\u2043\u2219]|^\d+\.|^[A-Z][a-z]/)) {
                   currentExp.description += trimmedLine + "\n";
                 }
               }

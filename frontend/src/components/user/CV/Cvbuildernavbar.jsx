@@ -27,6 +27,7 @@ const CVBuilderTopBar = ({
   showReset = false,
   onReset,
   resetLabel = "Create New Resume",
+  parsingConfidence = null,
 }) => {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [localTitle, setLocalTitle] = useState(title ?? "");
@@ -149,6 +150,21 @@ const CVBuilderTopBar = ({
             >
               Templates
             </button>
+          </div>
+        )}
+
+        {/* Parsing Confidence Indicator */}
+        {parsingConfidence && (
+          <div 
+            title={parsingConfidence.includes('AI') ? 'AI assisted in parsing this resume' : `Parsing quality: ${parsingConfidence}`}
+            className={`px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-medium whitespace-nowrap shadow-sm border ${
+              parsingConfidence.includes('High') ? 'bg-green-50 text-green-700 border-green-200' :
+              parsingConfidence === 'Medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+              'bg-red-50 text-red-700 border-red-200'
+            }`}
+          >
+            <Zap size={14} className={parsingConfidence.includes('High') ? 'text-green-600' : parsingConfidence === 'Medium' ? 'text-yellow-600' : 'text-red-600'} />
+            {parsingConfidence.includes('AI') ? 'AI Assisted Extraction' : `${parsingConfidence} Match`}
           </div>
         )}
       </div>
