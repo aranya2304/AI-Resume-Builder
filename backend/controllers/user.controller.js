@@ -121,7 +121,7 @@ export const getUserName = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT id, username, email, is_admin as \"isAdmin\", admin_request_status as \"adminRequestStatus\", is_active as \"isActive\", plan, last_login as \"lastLogin\", created_at as \"createdAt\", profile_views as \"profileViews\" FROM users"
+      "SELECT id, username, email, is_admin as \"isAdmin\", admin_request_status as \"adminRequestStatus\", is_active as \"isActive\", plan, last_login as \"lastLogin\", created_at as \"createdAt\", profile_views as \"profileViews\" FROM users ORDER BY created_at DESC"
     );
 
     // Ensure frontend gets Mongoose-compatible properties (specifically _id)

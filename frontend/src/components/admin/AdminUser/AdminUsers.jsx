@@ -278,9 +278,12 @@ export default function AdminUsers({ head = "Manage Users" }) {
 
     return matchesSearch && matchesRole && matchesPlan && matchesStatus;
   }).sort((a, b) => {
-    if (a.adminRequestStatus === 'pending' && b.adminRequestStatus !== 'pending') return -1;
-    if (a.adminRequestStatus !== 'pending' && b.adminRequestStatus === 'pending') return 1;
-    return 0;
+    // 1. Prioritize pending admin requests
+    if (a.adminRequestStatus === "pending" && b.adminRequestStatus !== "pending") return -1;
+    if (a.adminRequestStatus !== "pending" && b.adminRequestStatus === "pending") return 1;
+
+    // 2. Secondary sort: Most recently created first
+    return new Date(b.createdAt) - new Date(a.createdAt);
   });
 
   return (
