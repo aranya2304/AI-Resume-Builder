@@ -1,8 +1,65 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Pencil, Trash2, Check, X, AlertCircle, Search, Filter, UserCheck, Users, Crown, RefreshCw } from "lucide-react";
 import AdminNavbar from "../AdminNavBar/AdminNavBar";
 import axiosInstance from "../../../api/axios";
 import toast, { Toaster } from "react-hot-toast";
+
+
+function CustomDropdown({ icon, options, value, onChange }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef(null);
+  const selected = options.find(o => o.value === value);
+
+  React.useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className={`flex items-center gap-2 px-3.5 py-2.5 border-2 rounded-xl bg-white transition-all min-w-[148px] text-sm font-medium text-gray-700 ${open ? "border-indigo-400 bg-indigo-50" : "border-gray-200 hover:border-indigo-400 hover:bg-indigo-50"
+          }`}
+      >
+        {icon}
+        <span className="flex-1 text-left">{selected?.label}</span>
+        <svg
+          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute top-[calc(100%+6px)] left-0 min-w-full bg-white border-2 border-indigo-100 rounded-xl shadow-lg z-50 overflow-hidden">
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-left transition-colors whitespace-nowrap ${value === opt.value
+                  ? "bg-indigo-50 text-indigo-700 font-medium"
+                  : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+                }`}
+            >
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: opt.dot || "#9ca3af" }} />
+              <span className="flex-1">{opt.label}</span>
+              {value === opt.value && (
+                <svg className="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path d="m5 12 5 5L20 7" />
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AdminUsers({ head = "Manage Users" }) {
   const [users, setUsers] = useState([]);
@@ -35,17 +92,17 @@ export default function AdminUsers({ head = "Manage Users" }) {
   }, []);
 
   const fetchUsers = async () => {
-  try {
-    const [usersResponse, plansResponse] = await Promise.all([
-      axiosInstance.get("/api/user"),
-      axiosInstance.get("/api/plans"),
-    ]);
+    try {
+      const [usersResponse, plansResponse] = await Promise.all([
+        axiosInstance.get("/api/user"),
+        axiosInstance.get("/api/plans"),
+      ]);
 
-    setUsers(usersResponse.data);
+      setUsers(usersResponse.data);
 
-    const dynamicPlanNames = (plansResponse.data || [])
-      .map((plan) => plan?.name)
-      .filter(Boolean);
+      const dynamicPlanNames = (plansResponse.data || [])
+        .map((plan) => plan?.name)
+        .filter(Boolean);
 
       setPlanOptions(Array.from(new Set(["Free", ...dynamicPlanNames])));
       setLoading(false);
@@ -271,10 +328,12 @@ export default function AdminUsers({ head = "Manage Users" }) {
     const userPlan = (u.plan || "Free").toLowerCase();
     const matchesPlan = planFilter === "all" || userPlan === planFilter;
 
+
     // Status filter
+    const userIsActive = u.isActive !== false;
     const matchesStatus = statusFilter === "all" ||
-      (statusFilter === "active" && u.isActive) ||
-      (statusFilter === "inactive" && !u.isActive);
+      (statusFilter === "active" && userIsActive) ||
+      (statusFilter === "inactive" && !userIsActive);
 
     return matchesSearch && matchesRole && matchesPlan && matchesStatus;
   }).sort((a, b) => {
@@ -312,58 +371,47 @@ export default function AdminUsers({ head = "Manage Users" }) {
 
             {/* Filter Pills/Cards */}
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+
               {/* Role Filter */}
-              <div className="relative group">
-                <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 border-2 border-gray-200 rounded-xl bg-white hover:border-blue-400 hover:bg-blue-50 transition-colors">
-                  <UserCheck className="w-4 h-4 text-gray-500 group-hover:text-blue-600 transition-colors" />
-                  <select
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value)}
-                    className="bg-transparent focus:outline-none text-sm font-medium text-gray-700 cursor-pointer pr-1 sm:pr-2"
-                  >
-                    <option value="all">All Roles</option>
-                    <option value="admin">Admin</option>
-                    <option value="user">User</option>
-                    <option value="pending">Pending Admin</option>
-                  </select>
-                </div>
-              </div>
+              <CustomDropdown
+                value={roleFilter}
+                onChange={setRoleFilter}
+                icon={<UserCheck className="w-4 h-4 text-indigo-500" />}
+                options={[
+                  { value: "all", label: "All Roles", dot: "#6366f1" },
+                  { value: "admin", label: "Admin", dot: "#8b5cf6" },
+                  { value: "user", label: "User", dot: "#3b82f6" },
+                  { value: "pending", label: "Pending Admin", dot: "#f59e0b" },
+                ]}
+              />
 
               {/* Plan Filter */}
-              <div className="relative group">
-                <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 border-2 border-gray-200 rounded-xl bg-white hover:border-purple-400 hover:bg-purple-50 transition-colors">
-                  <Crown className="w-4 h-4 text-gray-500 group-hover:text-purple-600 transition-colors" />
-                  <select
-                    value={planFilter}
-                    onChange={(e) => setPlanFilter(e.target.value)}
-                    className="bg-transparent focus:outline-none text-sm font-medium text-gray-700 cursor-pointer pr-1 sm:pr-2"
-                  >
-                    <option value="all">All Plans</option>
-                    {planOptions.map((planName) => (
-                      <option key={planName} value={planName.toLowerCase()}>
-                        {planName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              <CustomDropdown
+                value={planFilter}
+                onChange={setPlanFilter}
+                icon={<Crown className="w-4 h-4 text-purple-500" />}
+                options={[
+                  { value: "all", label: "All Plans", dot: "#8b5cf6" },
+                  ...planOptions.map(name => ({
+                    value: name.toLowerCase(),
+                    label: name,
+                    dot: name === "Pro" ? "#f59e0b" : "#9ca3af",
+                  })),
+                ]}
+              />
+
 
               {/* Status Filter */}
-              <div className="relative group">
-                <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 border-2 border-gray-200 rounded-xl bg-white hover:border-green-400 hover:bg-green-50 transition-colors">
-                  <Users className="w-4 h-4 text-gray-500 group-hover:text-green-600 transition-colors" />
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="bg-transparent focus:outline-none text-sm font-medium text-gray-700 cursor-pointer pr-1 sm:pr-2"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-
+              <CustomDropdown
+                value={statusFilter}
+                onChange={setStatusFilter}
+                icon={<Users className="w-4 h-4 text-green-500" />}
+                options={[
+                  { value: "all", label: "All Status", dot: "#22c55e" },
+                  { value: "active", label: "Active", dot: "#22c55e" },
+                  { value: "inactive", label: "Inactive", dot: "#ee4e32" },
+                ]}
+              />
               {/* Clear Filters Button */}
               {(roleFilter !== "all" || planFilter !== "all" || statusFilter !== "all" || search) && (
                 <button
