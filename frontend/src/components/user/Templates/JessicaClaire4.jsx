@@ -11,6 +11,7 @@ const JessicaClaire4 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        github = "",
         experience = [],
         education = [],
         skills = { technical: [], soft: [] },

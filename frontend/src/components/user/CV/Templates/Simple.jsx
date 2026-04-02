@@ -24,9 +24,9 @@ const Simple = ({formData}) => {
           {phone && <span>📞 +91-{phone}</span>}
           {email && <span>✉️ {email}</span>}
           {location && <span>{location}</span>}
-          {website && <span>🌐 {website}</span>}
-          {github && <span>🐙 {github}</span>}
-          {linkedin && <span>🔗 {linkedin}</span>}
+          {website && <span>🌐 <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{website}</a></span>}
+          {github && <span>🐙 <a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{github}</a></span>}
+          {linkedin && <span>🔗 <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a></span>}
           {formData?.extraLinks?.map((link, index) => (
             <span key={index}> 
               <a href={link.url.startsWith("http") ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">

@@ -22,7 +22,7 @@ const ProfessionalTemplate = ({ formData }) => {
         <div className="flex justify-center flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
           {email && <span>{email}</span>}
           {phone && <span>• {phone}</span>}
-          {linkedin && <span>• {linkedin}</span>}
+          {linkedin && <span>• <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a></span>}
         </div>
         {address && <p className="text-sm text-slate-500 mt-1">{address}</p>}
       </div>

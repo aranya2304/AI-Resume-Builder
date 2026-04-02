@@ -24,7 +24,7 @@ const ElegantTemplate = ({ formData }) => {
         <div className="flex justify-center gap-12 text-[10px] font-bold uppercase tracking-[0.3em] text-stone-400">
            <span>{email}</span>
            <span>{phone}</span>
-           <span className="truncate max-w-[150px]">{linkedin}</span>
+           <span className="truncate max-w-[150px]">{linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a>}</span>
         </div>
         <div className="text-center mt-3 text-[10px] text-stone-300 uppercase tracking-widest">{address}</div>
         <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-[#fffcf5] px-8 text-stone-300">

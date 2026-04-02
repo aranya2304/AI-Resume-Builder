@@ -24,7 +24,7 @@ const MinimalTemplate = ({ formData }) => {
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-400 font-medium">
           <span>{email}</span>
           <span>{phone}</span>
-          <span className="truncate max-w-[150px]">{linkedin}</span>
+          <span className="truncate max-w-[150px]">{linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a>}</span>
           <span className="truncate max-w-[150px] italic">{address}</span>
         </div>
       </div>

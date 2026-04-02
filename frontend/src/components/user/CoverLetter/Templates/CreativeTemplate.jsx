@@ -25,7 +25,7 @@ const CreativeTemplate = ({ formData }) => {
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-bold opacity-90 uppercase tracking-widest">
           <span>{email}</span>
           <span>{phone}</span>
-          <span className="truncate max-w-[200px]">{linkedin}</span>
+          <span className="truncate max-w-[200px]">{linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-white underline">{linkedin}</a>}</span>
           <span className="truncate max-w-[200px]">{address}</span>
         </div>
       </div>

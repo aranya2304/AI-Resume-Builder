@@ -31,9 +31,9 @@ const CreativeTemplate = ({ formData }) => {
           {email && <span>✉ {email}</span>}
           {phone && <span>📱 {phone}</span>}
           {location && <span>📍 {location}</span>}
-          {linkedin && <span>💼 {linkedin}</span>}
-          {github && <span>💻 {github}</span>}
-          {website && <span>🌐 {website}</span>}
+          {linkedin && <span>💼 <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a></span>}
+          {github && <span>💻 <a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{github}</a></span>}
+          {website && <span>🌐 <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{website}</a></span>}
           {/* Extra Links */}
           {formData?.extraLinks?.map((link, index) => (
             <span key={index}>

@@ -25,7 +25,7 @@ const CorporateTemplate = ({ formData }) => {
         <div className="text-right text-xs space-y-1 font-medium text-gray-500">
           <p>{email}</p>
           <p>{phone}</p>
-          <p className="truncate max-w-[200px]">{linkedin}</p>
+          <p className="truncate max-w-[200px]">{linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a>}</p>
           <p className="whitespace-pre-line underline decoration-blue-100">{address}</p>
         </div>
       </div>

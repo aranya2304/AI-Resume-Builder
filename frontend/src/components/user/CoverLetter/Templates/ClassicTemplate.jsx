@@ -27,7 +27,7 @@ const ClassicTemplate = ({ formData }) => {
               <span>Electronic Mail: {email}</span>
            </div>
            <div className="flex gap-12 mt-1">
-              <span className="truncate max-w-[200px]">Profile: {linkedin}</span>
+              <span className="truncate max-w-[200px]">Profile: {linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a>}</span>
               <span className="text-gray-200">|</span>
               <span className="whitespace-pre-line underline decoration-gray-100">Residing at: {address}</span>
            </div>

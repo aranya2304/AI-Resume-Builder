@@ -34,7 +34,7 @@ const ModernTemplate = ({ formData }) => {
             <p className="break-all font-medium text-slate-200">{email}</p>
             <p className="font-medium text-slate-200">{phone}</p>
             <p className="whitespace-pre-line leading-relaxed">{address}</p>
-            <p className="text-blue-400 font-bold mt-2">{linkedin}</p>
+            <p className="text-blue-400 font-bold mt-2">{linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{linkedin}</a>}</p>
           </div>
         </div>
 

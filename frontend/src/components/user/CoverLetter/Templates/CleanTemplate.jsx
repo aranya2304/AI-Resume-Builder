@@ -24,7 +24,7 @@ const CleanTemplate = ({ formData }) => {
            <span className="text-stone-200">•</span>
            <span>{phone}</span>
            <span className="text-stone-200">•</span>
-           <span>{linkedin}</span>
+           <span>{linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a>}</span>
         </div>
       </div>
 

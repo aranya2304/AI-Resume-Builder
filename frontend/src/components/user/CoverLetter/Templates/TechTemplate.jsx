@@ -30,7 +30,7 @@ const TechTemplate = ({ formData }) => {
         <div className="grid grid-cols-2 gap-4 text-[10px] opacity-60 max-w-md">
           <div className="flex items-center gap-2"><span className="code-style">email:</span> {email}</div>
           <div className="flex items-center gap-2"><span className="code-style">phone:</span> {phone}</div>
-          <div className="flex items-center gap-2 underline decoration-blue-500/20"><span className="code-style">link:</span> {linkedin}</div>
+          <div className="flex items-center gap-2 underline decoration-blue-500/20"><span className="code-style">link:</span> {linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a>}</div>
           <div className="flex items-center gap-2 italic"><span className="code-style">addr:</span> {address}</div>
         </div>
       </div>

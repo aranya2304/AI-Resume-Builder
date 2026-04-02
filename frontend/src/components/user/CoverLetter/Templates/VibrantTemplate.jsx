@@ -28,7 +28,7 @@ const VibrantTemplate = ({ formData }) => {
           <div className="flex flex-wrap gap-x-8 gap-y-2 mt-8 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
              <div className="bg-slate-900 text-white px-3 py-1 rounded-sm">{email}</div>
              <div className="py-1 border-b-2 border-slate-100">{phone}</div>
-             <div className="py-1 border-b-2 border-slate-100 italic">{linkedin}</div>
+             <div className="py-1 border-b-2 border-slate-100 italic">{linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a>}</div>
           </div>
         </header>
 
