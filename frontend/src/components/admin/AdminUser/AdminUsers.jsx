@@ -346,9 +346,9 @@ export default function AdminUsers({ head = "Manage Users" }) {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
+    <div className="min-h-screen bg-slate-50">
       <Toaster />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <h1 className="text-2xl font-bold mb-6 text-gray-800">{head}</h1>
 
         {/* Modern Search and Filter Box */}
@@ -462,9 +462,9 @@ export default function AdminUsers({ head = "Manage Users" }) {
           )}
         </div>
 
-        <div className="hidden md:block bg-white border rounded-xl overflow-hidden shadow-sm">
+        <div className="hidden md:block bg-white border rounded-xl overflow-x-auto shadow-sm">
 
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-max">
             <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <th className="px-6 py-4 text-left">User Details</th>
@@ -702,6 +702,16 @@ export default function AdminUsers({ head = "Manage Users" }) {
                       ) : (
                         <span className="text-xs text-slate-400 italic">—</span>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Row 3: Created At */}
+                  <div className="mt-3 pt-3 border-t border-slate-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Created At</span>
+                      <span className="text-xs font-medium text-slate-700">
+                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A"}
+                      </span>
                     </div>
                   </div>
                 </div>
