@@ -379,7 +379,7 @@ export default function UserNavbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[420px] bg-white shadow-2xl z-[9999] flex flex-col overflow-hidden"
+              className="fixed top-0 right-0 bottom-0 sm:w-[420px] w-[340px] bg-white shadow-2xl z-[9999] flex flex-col overflow-hidden"
             >
               <div className="flex-shrink-0 px-6 py-5 bg-white flex items-center justify-between border-b border-gray-50">
                 <div className="flex items-center gap-3">
