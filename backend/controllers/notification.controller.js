@@ -85,6 +85,7 @@ export const getAdminNotifications = async (req, res) => {
         n.actor,
         n.is_read,
         n.created_at,
+        EXTRACT(EPOCH FROM (NOW() - n.created_at))::int AS age_seconds,
         n.user_id,
         u.username,
         u.email
@@ -96,16 +97,24 @@ export const getAdminNotifications = async (req, res) => {
       []
     );
 
-    const notifications = notificationsResult.rows.map((n) => ({
-      id: n.id,
-      type:n.type,
-      message : n.message,
-      actor: n.actor,
-      isRead: n.is_read,
-      createdAt: n.created_at,
-      userId: n.user_id,
-      user: n.username
-    }));
+    const notifications = notificationsResult.rows.map((n) => {
+      const messageSenderMatch =
+        n.type === "ADMIN_REQUEST" && typeof n.message === "string"
+          ? n.message.match(/^(.+?)\s+has requested for admin access$/i)
+          : null;
+
+      return {
+        id: n.id,
+        type: n.type,
+        message: n.message,
+        actor: n.actor,
+        isRead: n.is_read,
+        createdAt: n.created_at,
+        ageSeconds: Math.max(0, n.age_seconds || 0),
+        userId: n.user_id,
+        user: messageSenderMatch?.[1] || n.username || n.email || "User"
+      };
+    });
 
   
     const countResult = await pool.query(

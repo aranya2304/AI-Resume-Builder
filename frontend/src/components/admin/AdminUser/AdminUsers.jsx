@@ -642,8 +642,8 @@ export default function AdminUsers({ head = "Manage Users" }) {
                   </div>
 
                   {/* Row 2: Badges + Delete Button */}
-                  <div className="flex items-center justify-between mt-1 pt-3 border-t border-slate-200">
-                    <div className="flex gap-2">
+                  <div className="flex items-center justify-between mt-1 pt-3 border-t border-slate-200 gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       {u.username === "Super Admin" ? (
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border bg-purple-100 text-purple-700 border-purple-200 whitespace-nowrap" style={{ display: 'inline-block', width: 'max-content' }}>
                           Super Admin
@@ -669,6 +669,11 @@ export default function AdminUsers({ head = "Manage Users" }) {
                       >
                         {u.plan || "Free"}
                       </span>
+                      {u.adminRequestStatus === 'pending' && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border bg-amber-50 text-amber-700 border-amber-200 whitespace-nowrap">
+                          Pending Request
+                        </span>
+                      )}
                     </div>
 
                     {/* Action Buttons (Bottom Right) */}
