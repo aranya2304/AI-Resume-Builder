@@ -292,7 +292,7 @@ export default function UserNavbar() {
                       label="Profile"
                       onClick={() => {
                         setShowUserMenu(false);
-                        navigate("/user/edit-profile");
+                        navigate("/user/profile");
                       }}
                     />
                     <DropdownItem
