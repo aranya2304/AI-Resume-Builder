@@ -19,7 +19,6 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
-  FileText,
   Printer,
   Layers,
   CheckCircle2,
@@ -35,9 +34,6 @@ import { FaLinkedin } from "react-icons/fa";
 import ResumeBuilderTemplates from "../ResumeBuilder/ResumeBuilderTemplates";
 
 import jsPDF from "jspdf";
-import mergeWithSampleData, {
-  hasAnyUserData,
-} from "../../../utils/Datahelpers";
 import html2canvas from "html2canvas";
 
 import {
@@ -81,7 +77,7 @@ function useElementWidth(ref) {
 }
 
 /* ─── atom components ────────────────────────────────────────────────────── */
-const Divider = () => (
+const Divider = React.memo(() => (
   <div
     style={{
       width: 1,
@@ -91,47 +87,53 @@ const Divider = () => (
       margin: "0 1px",
     }}
   />
+));
+
+Divider.displayName = "Divider";
+
+const IconBtn = React.memo(
+  ({
+    onClick,
+    disabled = false,
+    active = false,
+    title,
+    children,
+  }) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      aria-label={title}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 32,
+        height: 32,
+        borderRadius: 7,
+        border: "none",
+        cursor: disabled ? "not-allowed" : "pointer",
+        background: active ? "#0f172a" : "transparent",
+        color: disabled ? "#94a3b8" : active ? "#f8fafc" : "#475569",
+        opacity: disabled ? 0.4 : 1,
+        transition: "background 0.12s, color 0.12s",
+        flexShrink: 0,
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled && !active) e.currentTarget.style.background = "#f1f5f9";
+      }}
+      onMouseLeave={(e) => {
+        if (!active) e.currentTarget.style.background = "transparent";
+      }}
+    >
+      {children}
+    </button>
+  ),
 );
 
-const IconBtn = ({
-  onClick,
-  disabled = false,
-  active = false,
-  title,
-  children,
-}) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    title={title}
-    aria-label={title}
-    style={{
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: 32,
-      height: 32,
-      borderRadius: 7,
-      border: "none",
-      cursor: disabled ? "not-allowed" : "pointer",
-      background: active ? "#0f172a" : "transparent",
-      color: disabled ? "#94a3b8" : active ? "#f8fafc" : "#475569",
-      opacity: disabled ? 0.4 : 1,
-      transition: "background 0.12s, color 0.12s",
-      flexShrink: 0,
-    }}
-    onMouseEnter={(e) => {
-      if (!disabled && !active) e.currentTarget.style.background = "#f1f5f9";
-    }}
-    onMouseLeave={(e) => {
-      if (!active) e.currentTarget.style.background = "transparent";
-    }}
-  >
-    {children}
-  </button>
-);
+IconBtn.displayName = "IconBtn";
 
-const Badge = ({ green, children }) => (
+const Badge = React.memo(({ green, children }) => (
   <span
     style={{
       display: "inline-flex",
@@ -150,9 +152,11 @@ const Badge = ({ green, children }) => (
     {green ? <CheckCircle2 size={10} /> : <Circle size={10} />}
     {children}
   </span>
-);
+));
 
-const PagePill = ({ current, total }) => (
+Badge.displayName = "Badge";
+
+const PagePill = React.memo(({ current, total }) => (
   <div
     style={{
       display: "flex",
@@ -178,7 +182,9 @@ const PagePill = ({ current, total }) => (
     </span>
     {total}
   </div>
-);
+));
+
+PagePill.displayName = "PagePill";
 
 /* ─── Default Layout Helpers ───────────────────────────────────────────────────────── */
 function formatMonthYear(value) {
@@ -201,7 +207,7 @@ function formatMonthYear(value) {
   return `${months[Number(month) - 1]}-${year}`;
 }
 
-function Section({ title, children }) {
+const Section = React.memo(({ title, children }) => {
   return (
     <section className="mb-6">
       <h2 className="text-xs font-bold uppercase tracking-wider text-blue-800 border-b mb-2">
@@ -210,7 +216,33 @@ function Section({ title, children }) {
       <div className="text-slate-600 text-xs">{children}</div>
     </section>
   );
-}
+});
+
+Section.displayName = "Section";
+
+/* ─── More Menu Items Config ───────────────────────────────────────────────────── */
+const createMoreMenuItems = (resetZoom, downloadPDF, setShowGrid, showGrid) => [
+  {
+    icon: <RotateCcw size={13} />,
+    label: "Reset zoom",
+    action: () => resetZoom(),
+  },
+  {
+    icon: <Printer size={13} />,
+    label: "Print",
+    action: () => window.print(),
+  },
+  {
+    icon: <Download size={13} />,
+    label: "Download PDF",
+    action: () => downloadPDF(),
+  },
+  {
+    icon: showGrid ? <X size={13} /> : <Eye size={13} />,
+    label: showGrid ? "Hide grid" : "Show grid",
+    action: () => setShowGrid((g) => !g),
+  },
+];
 
 /* ─── main ───────────────────────────────────────────────────────────────── */
 const LivePreview = forwardRef((props, ref) => {
@@ -487,27 +519,29 @@ const LivePreview = forwardRef((props, ref) => {
   });
 
   const templateId = currentTemplate?.id || currentTemplate;
-  const ResolvedTemplate = templateId
-    ? getTemplateComponent(templateId)
-    : null;
+  const ResolvedTemplate = useMemo(
+    () => (templateId ? getTemplateComponent(templateId) : null),
+    [templateId]
+  );
 
-  const renderPreviewContent = () => {
-    // Merge formData with placeholders for the preview
-    const placeholderData = {
+  const placeholderData = useMemo(
+    () => ({
       ...formData,
       fullName: formData.fullName || "YOUR NAME",
       summary: formData.summary || "Your professional summary goes here...",
       location: formData.location || "City, Country",
       email: formData.email || "email@example.com",
       phone: formData.phone || "+1 234 567 890",
-      // Ensure arrays are preserved correctly
       experience: formData.experience || [],
       education: formData.education || [],
       projects: formData.projects || [],
       certifications: formData.certifications || [],
       skills: formData.skills || { technical: [], soft: [] },
-    };
+    }),
+    [formData]
+  );
 
+  const renderPreviewContent = useCallback(() => {
     if (ResolvedTemplate) {
       return (
         <div ref={resume_doc}>
@@ -792,10 +826,10 @@ const LivePreview = forwardRef((props, ref) => {
         )}
       </div>
     );
-  };
+  }, [ResolvedTemplate, placeholderData, formData, fullName, email, phone, location, linkedin, website, summary, experience, education, skills, projects, certifications]);
 
   /* ── toolbar ──────────────────────────────────────────────────────────── */
-  const renderToolbar = () => (
+  const renderToolbar = useCallback(() => (
     <div
       style={{
         display: "flex",
@@ -1005,70 +1039,42 @@ const LivePreview = forwardRef((props, ref) => {
                   minWidth: 150,
                 }}
               >
-                {[
-                  {
-                    icon: <RotateCcw size={13} />,
-                    label: "Reset zoom",
-                    action: () => {
-                      resetZoom();
-                      setMoreOpen(false);
-                    },
-                  },
-                  {
-                    icon: <Printer size={13} />,
-                    label: "Print",
-                    action: () => {
-                      window.print();
-                      setMoreOpen(false);
-                    },
-                  },
-                  {
-                    icon: <Download size={13} />,
-                    label: "Download PDF",
-                    action: () => {
-                      downloadPDF();
-                      setMoreOpen(false);
-                    },
-                  },
-                  {
-                    icon: showGrid ? <X size={13} /> : <Eye size={13} />,
-                    label: showGrid ? "Hide grid" : "Show grid",
-                    action: () => {
-                      setShowGrid((g) => !g);
-                      setMoreOpen(false);
-                    },
-                  },
-                ].map(({ icon, label, action }) => (
-                  <button
-                    key={label}
-                    onClick={action}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 9,
-                      padding: "7px 10px",
-                      borderRadius: 7,
-                      border: "none",
-                      background: "none",
-                      cursor: "pointer",
-                      color: "#334155",
-                      fontSize: 12,
-                      fontFamily: "system-ui, sans-serif",
-                      fontWeight: 500,
-                      textAlign: "left",
-                      whiteSpace: "nowrap",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "#f8fafc")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "none")
-                    }
-                  >
-                    {icon}
-                    {label}
-                  </button>
-                ))}
+                {createMoreMenuItems(resetZoom, downloadPDF, setShowGrid, showGrid).map(
+                  ({ icon, label, action }) => (
+                    <button
+                      key={label}
+                      onClick={() => {
+                        action();
+                        setMoreOpen(false);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 9,
+                        padding: "7px 10px",
+                        borderRadius: 7,
+                        border: "none",
+                        background: "none",
+                        cursor: "pointer",
+                        color: "#334155",
+                        fontSize: 12,
+                        fontFamily: "system-ui, sans-serif",
+                        fontWeight: 500,
+                        textAlign: "left",
+                        whiteSpace: "nowrap",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "#f8fafc")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "none")
+                      }
+                    >
+                      {icon}
+                      {label}
+                    </button>
+                  ),
+                )}
               </div>
             )}
           </div>
@@ -1077,10 +1083,34 @@ const LivePreview = forwardRef((props, ref) => {
 
       </div>
     </div>
-  );
+  ), [
+    isNarrow,
+    isCompact,
+    currentTemplate,
+    isUserData,
+    totalPages,
+    currentPage,
+    goPrev,
+    goNext,
+    effectiveZoom,
+    ZOOM_MIN,
+    zoomOut,
+    zoomIn,
+    ZOOM_MAX,
+    manualZoom,
+    resetZoom,
+    isExpanded,
+    onCollapse,
+    onExpand,
+    moreOpen,
+    setMoreOpen,
+    downloadPDF,
+    showGrid,
+    setShowGrid,
+  ]);
 
   /* ── thumbnail strip ──────────────────────────────────────────────────── */
-  const renderThumbnailStrip = () => {
+  const renderThumbnailStrip = useCallback(() => {
     if (totalPages <= 1 || isNarrow) return null;
     return (
       <div
@@ -1136,9 +1166,9 @@ const LivePreview = forwardRef((props, ref) => {
         })}
       </div>
     );
-  };
+  }, [totalPages, isNarrow, currentPage]);
 
-  const renderCanvas = () => (
+  const renderCanvas = useCallback(() => (
     <div
       ref={containerRef}
       style={{
@@ -1211,28 +1241,41 @@ const LivePreview = forwardRef((props, ref) => {
         </div>
       </div>
     </div>
-  );
+  ), [
+    containerRef,
+    effectiveZoom,
+    currentPage,
+    setTotalPages,
+    isNarrow,
+    showGrid,
+    renderPreviewContent,
+    isCompact,
+    setShowGrid,
+  ]);
 
-  const inner = (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        background: "#ffffff",
-        border: "1px solid #e8edf3",
-        borderRadius: "inherit",
-        overflow: "hidden",
-        boxShadow: "inset 0 1px 4px rgba(0,0,0,0.02)",
-      }}
-    >
-      {renderToolbar()}
-      <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-        {renderCanvas()}
-        {renderThumbnailStrip()}
+  const inner = useMemo(
+    () => (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          background: "#ffffff",
+          border: "1px solid #e8edf3",
+          borderRadius: "inherit",
+          overflow: "hidden",
+          boxShadow: "inset 0 1px 4px rgba(0,0,0,0.02)",
+        }}
+      >
+        {renderToolbar()}
+        <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
+          {renderCanvas()}
+          {renderThumbnailStrip()}
+        </div>
       </div>
-    </div>
+    ),
+    [renderToolbar, renderCanvas, renderThumbnailStrip],
   );
 
   const getNavbarHeight = () => {
