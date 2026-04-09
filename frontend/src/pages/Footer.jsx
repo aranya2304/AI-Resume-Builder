@@ -50,7 +50,7 @@ function Footer() {
   const handleSubscribe = async (e) => {
     e.preventDefault();
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setStatus("error");
+      setStatus("invalid_email");
       return;
     }
     setStatus("loading");
@@ -62,11 +62,11 @@ function Footer() {
         setEmail("");
         setTimeout(() => setStatus("idle"), 3000); // Reset after 3s
       } else {
-        setStatus("error");
+        setStatus("server_error");
       }
     } catch (error) {
       console.error("Subscription error:", error);
-      setStatus("error");
+      setStatus("server_error");
     }
   };
 
@@ -128,7 +128,7 @@ function Footer() {
                 <div
                   className={`
                   flex items-center p-1 sm:p-1.5 border rounded-lg sm:rounded-xl transition-all duration-300 bg-gray-50
-                  ${status === "error" ? "border-red-200 ring-2 ring-red-500/10" : "border-gray-200 focus-within:ring-2 focus-within:ring-[#0077cc]/10 focus-within:border-[#0077cc]"}
+                  ${status === "invalid_email" || status === "server_error" ? "border-red-200 ring-2 ring-red-500/10" : "border-gray-200 focus-within:ring-2 focus-within:ring-[#0077cc]/10 focus-within:border-[#0077cc]"}
                   ${status === "success" ? "border-green-200 bg-green-50" : ""}
                 `}
                 >
@@ -136,7 +136,7 @@ function Footer() {
                   <div className="pl-1.5 sm:pl-2 text-gray-400">
                     {status === "success" ? (
                       <Check size={14} className="text-green-500" />
-                    ) : status === "error" ? (
+                    ) : status === "invalid_email" || status === "server_error" ? (
                       <AlertCircle size={14} className="text-red-500" />
                     ) : (
                       <Mail size={14} />
@@ -148,7 +148,7 @@ function Footer() {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      if (status === "error") setStatus("idle");
+                      if (status === "invalid_email" || status === "server_error") setStatus("idle");
                     }}
                     disabled={status === "loading" || status === "success"}
                     placeholder={
@@ -180,9 +180,13 @@ function Footer() {
                 </div>
 
                 {/* Status Message or Helper Text */}
-                {status === "error" ? (
+                {status === "invalid_email" ? (
                   <p className="mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
                     Enter a valid email
+                  </p>
+                ) : status === "server_error" ? (
+                  <p className="mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
+                    Server failed to send email. Check Nodemailer variables.
                   </p>
                 ) : (
                   <p className="mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] text-gray-500">
