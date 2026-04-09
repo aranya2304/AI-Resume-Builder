@@ -14,11 +14,10 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiX,
-  FiMoreVertical,
   FiRotateCcw,
 } from "react-icons/fi";
 
-import { Maximize2, Minimize2, ZoomIn, ZoomOut, X } from "lucide-react";
+import {  ZoomIn, ZoomOut, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UserNavBar from "../UserNavBar/UserNavBar";
 
@@ -33,8 +32,7 @@ const API_CONFIG = {
 
 const ITEMS_PER_PAGE = 9;
 const A4_WIDTH_PX = 900;
-const A4_HEIGHT_MM = 297;
-const A4_WIDTH_MM = 210;
+
 
 const ZOOM_CONFIG = {
   MIN: 50,
